@@ -56,6 +56,10 @@ void PS2Device::disable() {
      pio_sm_set_enabled(m_pio.pio, m_pio.sm, false);
 }
 
+uint8_t PS2Device::available() {
+    return m_fifo.available();
+}
+
 bool PS2Device::hasData() {
     return m_fifo.available() > 0;
 }

@@ -1,4 +1,4 @@
-#include "keyboard.h"
+#include "ps2keyboard.h"
 #include "PS2Device.h"
 #include <cstdio>
 #include <cstring>
@@ -293,17 +293,15 @@ static uint8_t modifiers = 0;
 static bool extended = false;
 static bool released = false;
 
-static uint32_t pressed[256/32];
-
 static inline uint16_t getCode(uint8_t key) {
     return extended ? 
         key < (sizeof ps2_ext_translations) / 2 ? ps2_ext_translations[key] : 0 :
         key < (sizeof ps2_translations) / 2 ? ps2_translations[key] : 0;
 }
 
-void ps2_poll() {
+void ps2keyboard_poll() {
     bool changed = false;
-    uint8_t key;
+
     while (keyboard.hasData()) {
         uint8_t key = keyboard.getData();
         printf("Handling PS2 code 0x%02x\n", key);

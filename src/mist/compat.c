@@ -10,7 +10,8 @@
 #include "mmc.h"
 #include "db9.h"
 #include "spi.h"
-#include "keyboard.h"
+#include "ps2keyboard.h"
+#include "ps2mouse.h"
 #include "usbdev.h"
 #include "mist-firmware/FatFs/diskio.h"
 #include "mist-firmware/arc_file.h"
@@ -337,7 +338,8 @@ int mist_init() {
 }
 
 int mist_loop() {
-    ps2_poll();
+    ps2keyboard_poll();
+    ps2mouse_poll();
     cdc_control_poll();
     storage_control_poll();
 

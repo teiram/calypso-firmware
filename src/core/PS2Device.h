@@ -24,6 +24,7 @@ namespace calypso {
         bool init();
         void disable();
         bool hasData();
+        uint8_t available();
         uint8_t getData();
         void putData(uint8_t value);
     };

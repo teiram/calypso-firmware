@@ -38,10 +38,21 @@ PIOProgram kbdPio = {
 };
 PS2Device keyboard(kbdPio, kbdFifo, Configuration::GPIO_PS2_CLK1);
 
-PIOProgram* pioPrograms[] = {
-    &kbdPio,
-    NULL
+uint8_t mouseBuffer[8];
+CircularBuffer<uint8_t> mouseFifo(mouseBuffer, 8);
+PIOProgram mousePio = {
+    .pio = pio0_hw,
+    .sm = 1,
+    .program = &ps2_program,
+    .interruptSource = pis_sm1_rx_fifo_not_empty,
+    .irqNumber = PIO0_IRQ_0,
+    .offset = 0,
+    .init = ps2_program_init,
+    .fifo = &mouseFifo
 };
+PS2Device mouse(mousePio, mouseFifo, Configuration::GPIO_PS2_CLK2);
+
+PIOProgram* pioPrograms[] = {&kbdPio, &mousePio};
 
 USBService usbService;
 HIDUSBController hidUSBController;
