@@ -1,0 +1,89 @@
+.program ps2
+.side_set 2 opt
+
+; out  -> data
+; in   -> clk
+; side -> clk, dat (pindir)
+; set  -> clk, data
+
+idle:
+    set   pindirs 0b00
+
+    mov   x, status                ; tx fifo < 1
+    jmp   !x, send                 ; if data is in fifo, then send
+
+    jmp   pin, idle                ; loop on data pin high, receive on data pin low (start bit)
+
+
+recv:
+    set   x, 10                   ; Receive 11 bits (start bit (0), 8 data bits, 1 parity bit, 1 stop bit (1))
+recvloop:
+    wait  0 pin 0                 ; clock goes low
+    in    pins, 2                 ; sample pins into ISR (we are sampling CLK and DATA)
+                                  ; needs to be decoded on host side (remove CLK bits)
+    wait  1 pin 0                 ; clock goes high
+    jmp   x--, recvloop
+    in    null 10                 ; Complete ISR (until 32 bits)
+    jmp   idle
+
+
+send:
+    pull  noblock                  ; Get data to send
+    set   pindirs, 0b11 side 0b10  ; Set pins for output, set data high, clock low
+    set   x, 24
+holdclklow:
+    jmp   x--, holdclklow [3]    ; Hold clock low for 100us
+
+    set   pindirs, 0b11 side 0b00  ; set data to 0, clock to 0, both output
+    set   pindirs, 0b10 side 0b01  ; set data to 0, clock to 1, clock input
+    wait  0 pin 0                  ; wait for clock to go low
+
+    set x, 9                       ; Loop over 10 bits, host provides parity
+sendloop:
+    wait  0 pin 0                  ; clock goes low
+    out   pins, 1                  ; output 1 bit to data pin
+    wait  1 pin 0                  ; clock goes high
+    jmp   x--, sendloop
+    out null, 22                   ; empty output register
+
+    set   pindirs, 0b00             ; set to input and clock in data ack
+    wait  0 pin 0                   ; clock goes low
+    wait  1 pin 0                   ; clock goes high
+
+    jmp idle                        ; back to idle
+
+% c-sdk {
+#include "hardware/clocks.h"
+
+static inline void ps2_program_init(PIO pio, uint sm, uint offset, uint8_t pin_clk) {
+    pio_gpio_init(pio, pin_clk);
+    pio_gpio_init(pio, pin_clk + 1); // data
+
+    pio_sm_config c = ps2_program_get_default_config(offset);
+
+    sm_config_set_set_pins(&c, pin_clk, 2);
+    sm_config_set_out_pins(&c, pin_clk + 1, 1);
+    sm_config_set_in_pins(&c, pin_clk);
+    sm_config_set_sideset_pins(&c, pin_clk); /* CLK, DATA */
+
+    /* DATA = 0 will trigger reception 
+    sm_config_set_jmp_pin(&c, pin_clk + 1); /* DATA pin */
+
+    /* shift right, no autopull, 32 bits wide */
+    sm_config_set_out_shift(&c, true, false, 32);
+
+    /* shift right, autopush,32 bits wide */
+    sm_config_set_in_shift(&c, true, true, 32);
+
+    /* STATUS will be true when the TX fifo is empty => nothing to send */  
+    sm_config_set_mov_status(&c, STATUS_TX_LESSTHAN, 1);
+
+    float div = (float)clock_get_hz(clk_sys) / (1000000); /*Clock set to 1Mhz, we can lower it down */
+    printf("SM clock divider is %f\n", div);
+    sm_config_set_clkdiv(&c, div);
+
+    pio_sm_init(pio, sm, offset, &c);
+    pio_sm_set_enabled(pio, sm, true);
+}
+
+%}
