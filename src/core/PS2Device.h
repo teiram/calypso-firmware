@@ -3,9 +3,9 @@
 
 #include <inttypes.h>
 #include "CircularBuffer.h"
-#include "PIOProgram.h"
+#include "PIOContext.h"
 
-extern PIOProgram* pioPrograms[];
+extern PIOContext* pioContexts[];
 
 extern "C" {
     inline static uint8_t decode(uint32_t value);
@@ -15,12 +15,13 @@ extern "C" {
 namespace calypso {
     class PS2Device {
     private:
+        static bool PIO_INITIALIZED;
         uint8_t m_clkGpio;
         CircularBuffer<uint8_t> &m_fifo;
-        PIOProgram &m_pio;
+        PIOContext &m_pio;
         inline uint8_t parity(uint8_t value);
     public:
-        PS2Device(PIOProgram &pio, CircularBuffer<uint8_t>& fifo, uint8_t clkGpio);
+        PS2Device(PIOContext &pio, CircularBuffer<uint8_t>& fifo, uint8_t clkGpio);
         bool init();
         void disable();
         bool hasData();

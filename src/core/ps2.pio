@@ -66,7 +66,7 @@ static inline void ps2_program_init(PIO pio, uint sm, uint offset, uint8_t pin_c
     sm_config_set_in_pins(&c, pin_clk);
     sm_config_set_sideset_pins(&c, pin_clk); /* CLK, DATA */
 
-    /* DATA = 0 will trigger reception 
+    /* DATA = 0 will trigger reception */
     sm_config_set_jmp_pin(&c, pin_clk + 1); /* DATA pin */
 
     /* shift right, no autopull, 32 bits wide */
@@ -78,8 +78,7 @@ static inline void ps2_program_init(PIO pio, uint sm, uint offset, uint8_t pin_c
     /* STATUS will be true when the TX fifo is empty => nothing to send */  
     sm_config_set_mov_status(&c, STATUS_TX_LESSTHAN, 1);
 
-    float div = (float)clock_get_hz(clk_sys) / (1000000); /*Clock set to 1Mhz, we can lower it down */
-    printf("SM clock divider is %f\n", div);
+    float div = (float)clock_get_hz(clk_sys) / (5000000); /*Clock set to 1Mhz, we can lower it down */
     sm_config_set_clkdiv(&c, div);
 
     pio_sm_init(pio, sm, offset, &c);

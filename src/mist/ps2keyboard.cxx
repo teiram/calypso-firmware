@@ -4,6 +4,7 @@
 #include <cstring>
 #include "calypso-debug.h"
 
+#include "pico/time.h"
 // Modifier bitmask
 //  bit  7      6       5       4       3       2       1       0
 //  key  RGUI   RALT    RSHIFT  RCTRL   LGUI    LALT    LSHIFT  LCTRL
@@ -301,10 +302,9 @@ static inline uint16_t getCode(uint8_t key) {
 
 void ps2keyboard_poll() {
     bool changed = false;
-
     while (keyboard.hasData()) {
         uint8_t key = keyboard.getData();
-        printf("Handling PS2 code 0x%02x\n", key);
+        PS2_DEBUG_LOG(L_DEBUG, "Handling PS2 code 0x%02x\n", key);
         if (key == 0xe0) {
             extended = true;
         } else if (key == 0xf0) {
