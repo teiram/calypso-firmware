@@ -10,7 +10,8 @@
 #include "mmc.h"
 #include "db9.h"
 #include "spi.h"
-#include "keyboard.h"
+#include "ps2keyboard.h"
+#include "ps2mouse.h"
 #include "usbdev.h"
 #include "mist-firmware/FatFs/diskio.h"
 #include "mist-firmware/arc_file.h"
@@ -290,13 +291,9 @@ int mist_init() {
     }
 
     disk_ioctl(fs.pdrv, GET_SECTOR_COUNT, &storage_size);
-    //storage_size = MMC_GetCapacity();
     storage_size >>= 11;
     printf("storage size is %ld MB\n", storage_size);
-#if defined(XILINX) && !defined(ZXUNO)
-    mb_ini_parse();
-    fpga_SetType(mb_cfg.fpga_type);
-#endif
+
     printf("ChangeDirectoryName\n");
     ChangeDirectoryName((unsigned char *) MIST_ROOT);
 
@@ -335,16 +332,14 @@ int mist_init() {
         fpga_init(s);
     }
 
-    //usb_dev_open();
-
     DB9SetLegacy(0);
     set_legacy_mode(user_io_core_type() == CORE_TYPE_UNKNOWN ? LEGACY_MODE : MIST_MODE);
     return 0;
 }
 
 int mist_loop() {
-    ps2_poll();
-    usb_poll();
+    ps2keyboard_poll();
+    ps2mouse_poll();
     cdc_control_poll();
     storage_control_poll();
 

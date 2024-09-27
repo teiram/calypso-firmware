@@ -8,7 +8,8 @@ add_library(mist STATIC
 	mmc.cxx
 	spi.cxx
 	fpga.cxx
-	keyboard.cxx
+	ps2keyboard.cxx
+	ps2mouse.cxx
 	compat.c
 	usbdev.c
 	${MIST_FW_PATH}/arc_file.c

@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <cstdio>
 #include "pico/stdlib.h"
 
 #include "Configuration.h"
@@ -11,7 +11,6 @@
 #include "mist/MistService.h"
 #include "USBService.h"
 #include "HIDUSBController.h"
-#include "ps2.pio.h"
 
 using namespace calypso;
 
@@ -26,22 +25,21 @@ SPISDCard sdcard(spi, Configuration::GPIO_SD_SEL);
 
 uint8_t kbdBuffer[8];
 CircularBuffer<uint8_t> kbdFifo(kbdBuffer, 8);
-PIOProgram kbdPio = {
-    .pio = pio0_hw,
+PIOContext kbdPio = {
     .sm = 0,
-    .program = &ps2_program,
-    .interruptSource = pis_sm0_rx_fifo_not_empty,
-    .irqNumber = PIO0_IRQ_0,
-    .offset = 0,
-    .init = ps2_program_init,
     .fifo = &kbdFifo
 };
 PS2Device keyboard(kbdPio, kbdFifo, Configuration::GPIO_PS2_CLK1);
 
-PIOProgram* pioPrograms[] = {
-    &kbdPio,
-    NULL
+uint8_t mouseBuffer[8];
+CircularBuffer<uint8_t> mouseFifo(mouseBuffer, 8);
+PIOContext mousePio = {
+    .sm = 1,
+    .fifo = &mouseFifo
 };
+PS2Device mouse(mousePio, mouseFifo, Configuration::GPIO_PS2_CLK2);
+
+PIOContext* pioContexts[] = {&kbdPio, &mousePio};
 
 USBService usbService;
 HIDUSBController hidUSBController;
@@ -57,6 +55,7 @@ int main() {
 
     spi.init();
     keyboard.init();
+    mouse.init();
     printf("Initializing services...\n");
     for (int i = 0; i < Service::serviceCount; i++) {
         Service *s = Service::services[i];
@@ -74,6 +73,5 @@ int main() {
                 s->attention();
             }
         }
-        sleep_ms(1);
     }
 }
