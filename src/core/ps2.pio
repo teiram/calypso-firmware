@@ -28,17 +28,21 @@ recvloop:
 
 
 send:
-    pull  noblock                  ; Get data to send
-    set   pindirs, 0b11 side 0b10  ; Set pins for output, set data high, clock low
-    set   x, 24
+    pull  noblock                   ; Get data to send
+    set   pindirs, 0b11 side 0b10   ; Set pins for output, set data high, clock low
+    set   y, 1
 holdclklow:
-    jmp   x--, holdclklow [3]    ; Hold clock low for 100us
+    set   x, 15                     ; We need to hold clock down at least 100us
+holdclklow1:                        ; With PIO clock at 1mhz, we need 100 clock cycles
+    jmp     x--, holdclklow1 [3]    ; 4us (16 times) = 64 us
+    jmp     y--, holdclklow
+
 
     set   pindirs, 0b11 side 0b00  ; set data to 0, clock to 0, both output
     set   pindirs, 0b10 side 0b01  ; set data to 0, clock to 1, clock input
     wait  0 pin 0                  ; wait for clock to go low
 
-    set x, 9                       ; Loop over 10 bits, host provides parity
+    set x, 9                       ; Loop over 10 bits, host provides parity as bit 8
 sendloop:
     wait  0 pin 0                  ; clock goes low
     out   pins, 1                  ; output 1 bit to data pin
@@ -78,7 +82,7 @@ static inline void ps2_program_init(PIO pio, uint sm, uint offset, uint8_t pin_c
     /* STATUS will be true when the TX fifo is empty => nothing to send */  
     sm_config_set_mov_status(&c, STATUS_TX_LESSTHAN, 1);
 
-    float div = (float)clock_get_hz(clk_sys) / (5000000); /*Clock set to 1Mhz, we can lower it down */
+    float div = (float) clock_get_hz(clk_sys) / 1000000; /* SPI clock at 1Mhz */
     sm_config_set_clkdiv(&c, div);
 
     pio_sm_init(pio, sm, offset, &c);

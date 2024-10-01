@@ -3,6 +3,7 @@
 
 #include <inttypes.h>
 #include "attrs.h"
+#include "hardware/gpio.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -10,8 +11,9 @@ extern "C" {
 
 #define lowest(a,b) ((a) < (b) ? (a) : (b))
 
-#define DISKLED_ON    {}
-#define DISKLED_OFF   {}
+#define LED_GPIO       25
+#define DISKLED_ON    do { gpio_put(LED_GPIO, true);} while (0);
+#define DISKLED_OFF   do { gpio_put(LED_GPIO, false);} while (0);
 
 #define SPI_MINIMIGV1_HACK {}
 #define STORE_VARS_SIZE   0x20

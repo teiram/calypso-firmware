@@ -17,12 +17,13 @@ namespace calypso {
     private:
         static bool PIO_INITIALIZED;
         uint8_t m_clkGpio;
-        CircularBuffer<uint8_t> &m_fifo;
         PIOContext &m_pio;
         inline uint8_t parity(uint8_t value);
+    protected:
+        CircularBuffer<uint8_t> &m_fifo;
     public:
         PS2Device(PIOContext &pio, CircularBuffer<uint8_t>& fifo, uint8_t clkGpio);
-        bool init();
+        virtual bool init();
         void disable();
         bool hasData();
         uint8_t available();

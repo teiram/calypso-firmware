@@ -1,5 +1,6 @@
 #include "PS2Device.h"
 #include "ps2.pio.h"
+#include "calypso-debug.h"
 
 using namespace calypso;
 
@@ -53,7 +54,6 @@ PS2Device::PS2Device(PIOContext& pio, CircularBuffer<uint8_t>& fifo, uint8_t clk
     m_clkGpio(clkGpio) {}
 
 bool PS2Device::init() {
-    /* dataPin and clkPin must be consecutive GPIOs */
     if (!PIO_INITIALIZED) {
         if (pio_add_program_at_offset(pio0, &ps2_program, 0) >= 0) {
 #ifdef USE_PIO_INTERRUPTS
@@ -61,15 +61,16 @@ bool PS2Device::init() {
             irq_set_enabled(PIO0_IRQ_0, true);
 #endif
             PIO_INITIALIZED = true;
+        } else {
+            PS2_DEBUG_LOG(L_ERROR, "Error adding PIO program\n");
+            return false;
         }
-#ifdef USE_PIO_INTERRUPTS   
-        pio_set_irq0_source_enabled(pio0, pio_get_rx_fifo_not_empty_interrupt_source(m_pio.sm), true);
-#endif
-        ps2_program_init(pio0, m_pio.sm, 0, m_clkGpio);
-        return true;
-    } else {
-        return false;
     }
+#ifdef USE_PIO_INTERRUPTS   
+    pio_set_irq0_source_enabled(pio0, pio_get_rx_fifo_not_empty_interrupt_source(m_pio.sm), true);
+#endif
+    ps2_program_init(pio0, m_pio.sm, 0, m_clkGpio);
+    return true;
 }
 
 void PS2Device::disable() {
@@ -78,7 +79,6 @@ void PS2Device::disable() {
 
 uint8_t PS2Device::available() {
 #ifndef USE_PIO_INTERRUPTS
-    gpio_put(25, !pio_sm_is_rx_fifo_empty(pio0, m_pio.sm));
     while (!pio_sm_is_rx_fifo_empty(pio0, m_pio.sm) && !m_fifo.full()) {
         uint32_t value = pio_sm_get_blocking(pio0, m_pio.sm);
         //Value needs to be decoded (PIO collects CLK and DATA samples)
@@ -111,6 +111,6 @@ inline uint8_t PS2Device::parity(uint8_t value) {
 
 void PS2Device::putData(uint8_t value) {
     if (!pio_sm_is_tx_fifo_full(pio0, m_pio.sm)) {
-      pio_sm_put_blocking(pio0, m_pio.sm, value | (parity(value) << 8));
+        pio_sm_put_blocking(pio0, m_pio.sm, value | (parity(value) << 8));
     }
 }

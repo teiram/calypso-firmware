@@ -8,6 +8,7 @@
 #include "SPISDCard.h"
 #include "Service.h"
 #include "PS2Device.h"
+#include "PS2Mouse.h"
 #include "mist/MistService.h"
 #include "USBService.h"
 #include "HIDUSBController.h"
@@ -37,7 +38,7 @@ PIOContext mousePio = {
     .sm = 1,
     .fifo = &mouseFifo
 };
-PS2Device mouse(mousePio, mouseFifo, Configuration::GPIO_PS2_CLK2);
+PS2Mouse mouse(mousePio, mouseFifo, Configuration::GPIO_PS2_CLK2);
 
 PIOContext* pioContexts[] = {&kbdPio, &mousePio};
 
