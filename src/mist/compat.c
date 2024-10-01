@@ -23,7 +23,7 @@
 #include "mist-firmware/fpga.h"
 #include "mist-firmware/config.h"
 #include "mist-firmware/cdc_control.h"
-
+#include "hardware/watchdog.h"
 
 const char version[] = {"$VER:ATH" VDATE};
 
@@ -89,7 +89,9 @@ void usb_init() {}
 void usb_poll() {}
 
 // Maybe we can implement this, but what for?
-void MCUReset() {}
+void MCUReset() {
+    watchdog_reboot(0, 0, 0);
+}
 
 void InitADC() {}
 void PollADC() {}
