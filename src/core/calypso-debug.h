@@ -2,6 +2,7 @@
 #define CALYPSO_DEBUG_H
 
 #include "Util.h"
+#include <cstdio>
 
 #define L_TRACE 0
 #define L_DEBUG 1
