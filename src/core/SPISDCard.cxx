@@ -7,9 +7,10 @@
 
 using namespace calypso;
 
-SPISDCard::SPISDCard(SPIDevice& spi, uint8_t cs):
+SPISDCard::SPISDCard(SPIDevice& spi, uint8_t cs, uint8_t directModeGPIO):
     m_spi(spi),
     m_cs(cs),
+    m_directModeGPIO(directModeGPIO),
     m_isSDHC(false) {}
 
 bool SPISDCard::isSDHC() {
@@ -301,17 +302,23 @@ bool SPISDCard::readSectorTry(uint32_t lba, uint8_t *data) {
         SD_DEBUG_LOG(L_ERROR, "Read failed (2)\n");
         return 1;
     }
-  
-#ifdef SD_DIRECT_MODE_GPIO
-    if (!sector) gpio_put(SD_DIRECT_MODE_GPIO, 0);
-#endif
-    m_spi.recv(data, 512);
-  
+
+    if (data == 0) {
+        gpio_put(m_directModeGPIO, 0);
+        // Maybe we can do this faster somehow else (using some global buffer)
+        for (int i = 0; i < 512; i++) {
+            m_spi.byte(0xff);
+        }
+    } else {
+        m_spi.recv(data, 512);
+    }
+
     uint8_t crc[2];
     m_spi.recv(crc, 2);
-#ifdef SD_DIRECT_MODE_GPIO
-    if (!sector) gpio_put(SD_DIRECT_MODE_GPIO, 1);
-#endif
+    if (data == 0) {
+        gpio_put(m_directModeGPIO, 1);
+    }
+
     toggleSelect(1);
 
     uint16_t crcw = (crc[0] << 8) | crc[1];

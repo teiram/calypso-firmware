@@ -22,7 +22,7 @@ JTAG jtag(Configuration::GPIO_JTAG_TDO, Configuration::GPIO_JTAG_TDI,
 
 Joystick joystick;
 
-SPISDCard sdcard(spi, Configuration::GPIO_SD_SEL);
+SPISDCard sdcard(spi, Configuration::GPIO_SD_SEL, Configuration::GPIO_MIST_DMODE);
 
 uint8_t kbdBuffer[8];
 CircularBuffer<uint8_t> kbdFifo(kbdBuffer, 8);

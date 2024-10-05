@@ -11,6 +11,7 @@ namespace calypso {
         static constexpr uint32_t DEFAULT_TIMEOUT = 2000;
         SPIDevice& m_spi;
         uint8_t m_cs;
+        uint8_t m_directModeGPIO;
         bool m_isSDHC;
         uint8_t spin();
         uint8_t reset();
@@ -31,7 +32,7 @@ namespace calypso {
         uint8_t cmd59();
         bool readSectorTry(uint32_t lba, uint8_t *data);
     public:
-        SPISDCard(SPIDevice& spi, uint8_t cs);
+        SPISDCard(SPIDevice& spi, uint8_t cs, uint8_t directModeGpio);
         bool isSDHC();
         bool init();
         bool writeSector(uint32_t lba, const uint8_t *data);
