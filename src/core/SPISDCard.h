@@ -1,7 +1,7 @@
 #ifndef SPISDCARD_H
 #define SPISDCARD_H
 
-#include "SPI.h"
+#include "SPIDevice.h"
 #include <inttypes.h>
 
 namespace calypso {
@@ -9,7 +9,7 @@ namespace calypso {
     private:
         static constexpr uint8_t DEFAULT_RETRIES = 10;
         static constexpr uint32_t DEFAULT_TIMEOUT = 2000;
-        SPI& m_spi;
+        SPIDevice& m_spi;
         uint8_t m_cs;
         bool m_isSDHC;
         uint8_t spin();
@@ -31,7 +31,7 @@ namespace calypso {
         uint8_t cmd59();
         bool readSectorTry(uint32_t lba, uint8_t *data);
     public:
-        SPISDCard(SPI& spi, uint8_t cs);
+        SPISDCard(SPIDevice& spi, uint8_t cs);
         bool isSDHC();
         bool init();
         bool writeSector(uint32_t lba, const uint8_t *data);

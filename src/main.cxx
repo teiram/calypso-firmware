@@ -2,7 +2,7 @@
 #include "pico/stdlib.h"
 
 #include "Configuration.h"
-#include "SPI.h"
+#include "SPIDevice.h"
 #include "JTAG.h"
 #include "Joystick.h"
 #include "SPISDCard.h"
@@ -15,7 +15,7 @@
 
 using namespace calypso;
 
-SPI spi(spi0, Configuration::GPIO_SPI_SCK, Configuration::GPIO_SPI_MISO, Configuration::GPIO_SPI_MOSI);
+SPIDevice spi(spi0, Configuration::GPIO_SPI_SCK, Configuration::GPIO_SPI_MISO, Configuration::GPIO_SPI_MOSI);
 
 JTAG jtag(Configuration::GPIO_JTAG_TDO, Configuration::GPIO_JTAG_TDI,
     Configuration::GPIO_JTAG_TCK, Configuration::GPIO_JTAG_TMS);

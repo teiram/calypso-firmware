@@ -7,7 +7,7 @@
 
 using namespace calypso;
 
-SPISDCard::SPISDCard(SPI& spi, uint8_t cs):
+SPISDCard::SPISDCard(SPIDevice& spi, uint8_t cs):
     m_spi(spi),
     m_cs(cs),
     m_isSDHC(false) {}
