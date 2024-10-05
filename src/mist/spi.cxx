@@ -1,10 +1,10 @@
 #include "spi.h"
-#include "SPI.h"
+#include "SPIDevice.h"
 #include "Configuration.h"
 #include "hardware/gpio.h"
 #include <stdio.h>
 
-extern calypso::SPI spi;
+extern calypso::SPIDevice spi;
 
 #define SPI_SLOW_BAUD   500000
 #define SPI_SDC_BAUD   24000000

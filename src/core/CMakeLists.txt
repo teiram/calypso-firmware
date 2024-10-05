@@ -1,6 +1,6 @@
 add_library(core STATIC
 	CRC.cxx
-	SPI.cxx
+	SPIDevice.cxx
 	PS2Device.cxx
 	PS2Mouse.cxx
 	JTAG.cxx

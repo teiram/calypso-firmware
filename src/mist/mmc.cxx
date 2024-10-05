@@ -20,6 +20,7 @@ unsigned char MMC_Read(unsigned long lba, unsigned char *pReadBuffer) {
         MMC_DEBUG_LOG(L_ERROR, "Error reading sector at lba=%d\n", lba);
         return 0;
     } else {
+        MMC_DEBUG_DUMP(L_TRACE, "Sector Read:", pReadBuffer, 512);
         return 1;
     }
 }

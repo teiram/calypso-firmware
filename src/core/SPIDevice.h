@@ -1,10 +1,10 @@
-#ifndef SPI_H
-#define SPI_H
+#ifndef SPIDEVICE_H
+#define SPIDEVICE_H
 #include <inttypes.h>
 #include "hardware/spi.h"
 
 namespace calypso {
-    class SPI {
+    class SPIDevice {
     private:
         static constexpr uint32_t DEFAULT_BAUDRATE = 400 * 1000;
 
@@ -15,7 +15,7 @@ namespace calypso {
         uint32_t m_baudrate;
 
     public:
-        SPI(spi_inst_t* spiPeripheral, uint8_t sck, uint8_t miso, uint8_t mosi);
+        SPIDevice(spi_inst_t* spiPeripheral, uint8_t sck, uint8_t miso, uint8_t mosi);
         bool init();
         void setBaudrate(uint32_t baudrate);
         uint32_t baudrate() const;
@@ -27,4 +27,4 @@ namespace calypso {
     };
 }
 
-#endif //SPI_H
+#endif //SPIDEVICE_H

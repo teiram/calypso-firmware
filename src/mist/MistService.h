@@ -2,7 +2,7 @@
 #define MIST_SERVICE_H
 
 #include "Service.h"
-#include "SPI.h"
+#include "SPIDevice.h"
 #include "JTAG.h"
 #include "Joystick.h"
 #include "HIDUSBController.h"
