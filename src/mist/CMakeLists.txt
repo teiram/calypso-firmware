@@ -36,6 +36,7 @@ add_library(mist STATIC
 	${MIST_FW_PATH}/pcecd.c
 	${MIST_FW_PATH}/settings.c
 	${MIST_FW_PATH}/state.c
+	${MIST_FW_PATH}/snes.c
 	${MIST_FW_PATH}/swap.c
 	${MIST_FW_PATH}/tos.c
 	${MIST_FW_PATH}/user_io.c
