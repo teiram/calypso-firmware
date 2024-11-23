@@ -165,7 +165,9 @@ unsigned char UserButton() {
     return 0;
 }
 
-void EnableFpgaMinimig() {}
+void EnableFpgaMinimig() {
+    EnableFpga();
+}
 
 bool eth_present = 0;
 
