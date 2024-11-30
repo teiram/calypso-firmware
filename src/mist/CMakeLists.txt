@@ -42,6 +42,7 @@ add_library(mist STATIC
 	${MIST_FW_PATH}/user_io.c
 	${MIST_FW_PATH}/utils.c
 	${MIST_FW_PATH}/xmodem.c
+	${MIST_FW_PATH}/zx_col.c
 	${MIST_FW_PATH}/FatFs/diskio.c
 	${MIST_FW_PATH}/FatFs/ff.c
 	${MIST_FW_PATH}/FatFs/ffsystem.c
