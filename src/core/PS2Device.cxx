@@ -25,22 +25,18 @@ static uint8_t decode(uint32_t value) {
 }
 
 #define USE_PIO_INTERRUPTS 1
-/* There is some issue with PIO interrupts. The initial approach
- * is to have an interrupt triggered when the RX fifo of the program 
- * is not empty. But it seems to only trigger once, and when it triggers
- * the interrupt mask of the PIO is not properly set (pio_interrupt_get returns false)
- * Clearing the interrupt also seems to not rearm it
- * Weirdly enough adding some printf statement elsewhere (in ps2 poll) seeems to hide the issue
- */
+
 #ifdef USE_PIO_INTERRUPTS
 static void ps2IrqCallback(void) {
     for (int i = 0; i < 2; i++) {
         PIOContext *context = pioContexts[i];
         if (context) {
-            while (!pio_sm_is_rx_fifo_empty(pio0, context->sm) && !context->fifo->full()) {
+            while (!pio_sm_is_rx_fifo_empty(pio0, context->sm)) {
                 uint32_t value = pio_sm_get_blocking(pio0, context->sm);
-                //Value needs to be decoded (PIO collects CLK and DATA samples)
-                context->fifo->write(decode(value));
+                if (!context->fifo->full()) {
+                    //Value needs to be decoded (PIO collects CLK and DATA samples)
+                    context->fifo->write(decode(value));
+                }
             }
         }
     }
