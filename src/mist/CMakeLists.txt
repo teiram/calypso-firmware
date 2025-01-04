@@ -12,13 +12,14 @@ add_library(mist STATIC
 	ps2mouse.cxx
 	compat.c
 	usbdev.c
+	dataio.c
 	${MIST_FW_PATH}/arc_file.c
 	${MIST_FW_PATH}/archie.c
 	${MIST_FW_PATH}/boot.c
 	${MIST_FW_PATH}/cdc_control.c
 	${MIST_FW_PATH}/config.c
 	${MIST_FW_PATH}/cue_parser.c
-	${MIST_FW_PATH}/data_io.c
+	data_io.c
 	${MIST_FW_PATH}/fat_compat.c
 	${MIST_FW_PATH}/fdd.c
 	${MIST_FW_PATH}/font.c
