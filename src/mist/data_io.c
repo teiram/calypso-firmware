@@ -150,7 +150,7 @@ static void data_io_file_tx_fill(unsigned char fill, unsigned int len) {
   DisableFpga();
 }
 
-void __weak data_io_file_tx(FIL *file, char index, const char *ext) {
+void __attribute__((weak)) data_io_file_tx(FIL *file, char index, const char *ext) {
   data_io_file_tx_prepare(file, index, ext);
   data_io_file_tx_send(file);
   data_io_file_tx_done();
