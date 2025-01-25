@@ -1,14 +1,22 @@
 #include <string.h>
 #include "MistService.h"
+#include "MistHIDUSBController.h"
+#include "MistUSBJoystickHandler.h"
+#include "MistUSBKeyboardHandler.h"
+#include "MistUSBMouseHandler.h"
 #include "compat.h"
 #include "hardware/gpio.h"
 
 using namespace calypso;
 
-MistService::MistService(HIDUSBController& hidUSBController, uint8_t userIOGPIO, uint8_t dataIOGPIO, uint8_t osdGPIO, uint8_t directModeGPIO):
-    m_usbKeyboardHandler(),
-    m_usbMouseHandler(),
-    m_hidUSBController(hidUSBController),
+MistUSBJoystickHandler usbJoystickHandler;
+MistUSBKeyboardHandler usbKeyboardHandler;
+MistUSBMouseHandler usbMouseHandler;
+MistHIDUSBController mistHIDUSBController(&usbKeyboardHandler,
+    &usbMouseHandler,
+    &usbJoystickHandler);
+
+MistService::MistService(uint8_t userIOGPIO, uint8_t dataIOGPIO, uint8_t osdGPIO, uint8_t directModeGPIO):
     m_userIOGPIO(userIOGPIO),
     m_dataIOGPIO(dataIOGPIO),
     m_osdGPIO(osdGPIO),
@@ -31,9 +39,6 @@ bool MistService::init() {
     initializeSelectGPIO(m_directModeGPIO);
 
     mist_init();
-
-    m_hidUSBController.addKbdReportHandler(&m_usbKeyboardHandler);
-    m_hidUSBController.addMouseReportHandler(&m_usbMouseHandler);
     return true;
 }
 

@@ -5,9 +5,6 @@
 #include "SPIDevice.h"
 #include "JTAG.h"
 #include "Joystick.h"
-#include "HIDUSBController.h"
-#include "MistUSBKeyboardHandler.h"
-#include "MistUSBMouseHandler.h"
 #include <cinttypes>
 
 namespace calypso {
@@ -18,13 +15,10 @@ namespace calypso {
         uint8_t m_dataIOGPIO;
         uint8_t m_osdGPIO;
         uint8_t m_directModeGPIO;
-        HIDUSBController& m_hidUSBController;
-        MistUSBKeyboardHandler m_usbKeyboardHandler;
-        MistUSBMouseHandler m_usbMouseHandler;
+
         inline void initializeSelectGPIO(uint8_t gpio);
     public:
-        MistService(HIDUSBController &hidUSBController, 
-            uint8_t userIOGPIO, uint8_t dataIOGPIO, uint8_t osdGPIO, uint8_t directModeGPIO);
+        MistService(uint8_t userIOGPIO, uint8_t dataIOGPIO, uint8_t osdGPIO, uint8_t directModeGPIO);
         const char* name();
         bool init();
         bool needsAttention();

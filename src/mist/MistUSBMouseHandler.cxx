@@ -8,7 +8,7 @@ extern "C" {
 }
 using namespace calypso;
 
-void MistUSBMouseHandler::handleReport(uint8_t const* report, uint16_t len) {
+void MistUSBMouseHandler::handleReport(uint8_t const index, uint8_t const* report, uint16_t len) {
     USB_DEBUG_DUMP(L_TRACE, "USB Mouse report", report, len);
     // TODO: Check if this is right
     if (len >= 4) {

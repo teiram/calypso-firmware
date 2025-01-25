@@ -8,10 +8,11 @@ add_library(mist STATIC
 	mmc.cxx
 	spi.cxx
 	fpga.cxx
+	hid.cxx
 	ps2keyboard.cxx
 	ps2mouse.cxx
-	compat.c
 	usbdev.c
+	compat.c
 	dataio.c
 	${MIST_FW_PATH}/arc_file.c
 	${MIST_FW_PATH}/archie.c
@@ -50,13 +51,11 @@ add_library(mist STATIC
 	${MIST_FW_PATH}/FatFs/ffunicode.c
 	${MIST_FW_PATH}/usb/joymapping.c
 	${MIST_FW_PATH}/usb/hidparser.c
-	${MIST_FW_PATH}/usb/hid.c
-	${MIST_FW_PATH}/usb/joystick.c
-	${MIST_FW_PATH}/usb/xboxusb.c
-	${MIST_FW_PATH}/usb/timer.c
-	${MIST_FW_PATH}/usb/usbdebug.c
+	MistHIDUSBController.cxx
 	MistUSBKeyboardHandler.cxx
 	MistUSBMouseHandler.cxx
+	MistUSBJoystickHandler.cxx
+        PS3USBHIDDriver.cxx
 	MistService.cxx)
 target_compile_options(mist PRIVATE
   "-DVDATE=\"\""

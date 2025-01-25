@@ -12,7 +12,6 @@
 #include "spi.h"
 #include "ps2keyboard.h"
 #include "ps2mouse.h"
-#include "usbdev.h"
 #include "mist-firmware/FatFs/diskio.h"
 #include "mist-firmware/arc_file.h"
 #include "mist-firmware/font.h"
@@ -24,6 +23,7 @@
 #include "mist-firmware/config.h"
 #include "mist-firmware/cdc_control.h"
 #include "hardware/watchdog.h"
+#include "joystick.h"
 
 const char version[] = {"$VER:ATH" VDATE};
 
@@ -347,6 +347,7 @@ int mist_loop() {
     cdc_control_poll();
     storage_control_poll();
 
+    joystick_poll();
     if (legacy_mode == LEGACY_MODE) {
         if (user_io_core_type() != CORE_TYPE_UNKNOWN) {
             set_legacy_mode(MIST_MODE);
