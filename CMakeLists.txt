@@ -7,7 +7,7 @@ set(PROGRAM_NAME calypso-firmware)
 #So far needed, something odd happens with optimization
 set(CMAKE_BUILD_TYPE RELEASE)
 
-#set(LOG 2)
+#set(LOG 3)
 
 include(pico_sdk_import.cmake)
 

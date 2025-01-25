@@ -11,7 +11,6 @@
 #include "PS2Mouse.h"
 #include "mist/MistService.h"
 #include "USBService.h"
-#include "HIDUSBController.h"
 
 using namespace calypso;
 
@@ -43,9 +42,7 @@ PS2Mouse mouse(mousePio, mouseFifo, Configuration::GPIO_PS2_CLK2);
 PIOContext* pioContexts[] = {&kbdPio, &mousePio};
 
 USBService usbService;
-HIDUSBController hidUSBController;
-MistService mistService(hidUSBController, 
-    Configuration::GPIO_MIST_USERIO, Configuration::GPIO_MIST_DATAIO,
+MistService mistService(Configuration::GPIO_MIST_USERIO, Configuration::GPIO_MIST_DATAIO,
     Configuration::GPIO_MIST_OSD, Configuration::GPIO_MIST_DMODE);
 
 int main() {
