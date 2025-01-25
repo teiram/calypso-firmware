@@ -14,14 +14,14 @@ void Util::hexdump(uint8_t *data, uint16_t size, uint16_t offset) {
         uint8_t b2c = (size > 16) ? 16 : size;
         uint8_t i;
         for (i = 0; i < b2c ; i++) {
-            printf("%02x ", data[i] & 0xff);
+            printf("%02x ", ptr[i] & 0xff);
         }
         printf("  ");
         for (i = 0; i < (16 - b2c); i++) {
             printf("   ");
         }
         for (i = 0; i < b2c; i++) {
-            printf("%c", isprint(data[i]) ? ptr[i] : '.');
+            printf("%c", isprint(ptr[i]) ? ptr[i] : '.');
         }
         printf("\n");
         ptr += b2c;
