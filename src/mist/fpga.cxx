@@ -6,10 +6,26 @@
 using namespace calypso;
 extern JTAG jtag;
 
+static FRESULT getCoreFile(const char *name, FIL *fd, const char **openedFileName) {
+    FRESULT result;
+    if (name) {
+        *openedFileName = (char *) name;
+        return f_open(fd, *openedFileName, FA_READ);
+    } else {
+        *openedFileName = "CORE.CALYPSO.RBF";
+        if ((result = f_open(fd, *openedFileName, FA_READ)) != FR_OK) {
+            *openedFileName = "CORE.RBF";
+            return f_open(fd, *openedFileName, FA_READ);
+        } else {
+            return result;
+        }
+    }
+}
+
 unsigned char ConfigureFpga(const char *bitfile) {
     FIL bfile;
-    const char* filename = bitfile ? bitfile : "CORE.RBF";
-    if (f_open(&bfile, filename, FA_READ) == FR_OK) {
+    const char *filename;
+    if (getCoreFile(bitfile, &bfile, &filename) == FR_OK) {
         uint64_t size = f_size(&bfile);
         printf("FPGA bitstream file %s opened, file size = %ld\n", filename, size);
         uint8_t buffer[512];
