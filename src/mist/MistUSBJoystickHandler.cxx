@@ -1,6 +1,7 @@
 #include "MistUSBJoystickHandler.h"
 #include "calypso-debug.h"
 #include "Configuration.h"
+#include "MistUtil.h"
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
@@ -49,13 +50,23 @@ bool MistUSBJoystickHandler::addDevice(uint8_t const deviceId, uint16_t vid, uin
 
 
 void MistUSBJoystickHandler::removeDevice(uint8_t const deviceId) {
-    for (uint8_t i = 0; i < MAX_JOYSTICKS; i++) {
+    int8_t joystickNumberRemoved = -1;
+    uint8_t i;
+    for (i = 0; i < MAX_JOYSTICKS; i++) {
         if (m_joysticks[i].used && m_joysticks[i].deviceId == deviceId) {
             m_joysticks[i].used = false;
+            joystickNumberRemoved = m_joysticks[i].joyNumber;
             m_numDevices -= 1;
             StateNumJoysticksSet(m_numDevices);
             StateUsbIdSet(0, 0, 0, m_numDevices);
             break;
+        }
+    }
+    if (joystickNumberRemoved > -1) {
+        for (i = 0; i < MAX_JOYSTICKS; i++) {
+            if (m_joysticks[i].used && m_joysticks[i].joyNumber > joystickNumberRemoved) {
+                m_joysticks[i].joyNumber -= 1;
+            }
         }
     }
 }
@@ -102,47 +113,6 @@ bool MistUSBJoystickHandler::addButtonMapping(const char* s) {
 	return false;
 }
 
-uint16_t MistUSBJoystickHandler::collectBits(uint8_t const* data, uint16_t offset, uint8_t size,
-    bool isSigned) {
-
-	// mask unused bits of first byte
-	uint8_t mask = 0xff << (offset & 7);
-	uint8_t byte = offset / 8;
-	uint8_t bits = size;
-	uint8_t shift = offset & 7;
-
-	uint16_t rval = (data[byte++] & mask) >> shift;
-	mask = 0xff;
-	shift = 8 - shift;
-	bits -= shift;
-
-	// first byte already contained more bits than we need
-	if(shift > size) {
-		// mask unused bits
-		rval &= (1 << size) - 1;
-	} else {
-		// further bytes if required
-		while (bits) {
-			mask = (bits < 8) ? (0xff >> (8 - bits)) : 0xff;
-			rval += (data[byte++] & mask) << shift;
-			shift += 8;
-			bits -= (bits > 8) ? 8: bits;
-		}
-	}
-
-	if (isSigned) {
-		// do sign expansion
-		uint16_t signBit = 1 << (size - 1);
-		if (rval & signBit) {
-			while (signBit) {
-				rval |= signBit;
-				signBit <<= 1;
-			}
-		}
-	}
-	return rval;
-}
-
 void MistUSBJoystickHandler::updateJoystickStatus(uint8_t index, uint8_t const* report, uint16_t length) {
     hid_report_t *conf = m_joysticks[index].report;
     uint8_t buttons = 0;
@@ -154,7 +124,7 @@ void MistUSBJoystickHandler::updateJoystickStatus(uint8_t index, uint8_t const* 
 		// is signed. This means that the value itself is also signed
 		bool isSigned = conf->joystick_mouse.axis[i].logical.min > 
 				conf->joystick_mouse.axis[i].logical.max;
-		a[i] = collectBits(report, conf->joystick_mouse.axis[i].offset, 
+		a[i] = MistUtil::collectBits(report, conf->joystick_mouse.axis[i].offset, 
 			conf->joystick_mouse.axis[i].size, isSigned);
 	}
     for (uint8_t i = 0; i < 4; i++) {
@@ -229,7 +199,7 @@ void MistUSBJoystickHandler::updateJoysticks() {
         if (m_joysticks[i].used) {
             uint32_t value = m_joysticks[i].mistJoyStatus;
             uint8_t joyNumber = m_joysticks[i].joyNumber;
-            joyNumber = (joyNumber == 0) && mist_cfg.joystick0_prefer_db9 ? 1 : joyNumber;
+            joyNumber = (joyNumber == 0 && mist_cfg.joystick0_prefer_db9) ? 1 : joyNumber;
 
             USB_DEBUG_LOG(L_DEBUG, "New value %08x for joystick with number %d\n",
                 value, joyNumber);

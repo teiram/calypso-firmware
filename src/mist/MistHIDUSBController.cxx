@@ -27,7 +27,6 @@ MistHIDUSBController::MistHIDUSBController(USBReportHandler* kbdReportHandler,
     }
     m_drivers = hid_drivers;
     m_numDrivers= sizeof(hid_drivers) / sizeof(custom_driver_t);
-    USB_DEBUG_LOG(L_INFO, "Number of custom drivers: %d\n", m_numDrivers);
 }
 
 int8_t MistHIDUSBController::getFreeHIDEntry() {
@@ -121,6 +120,17 @@ void MistHIDUSBController::removeHIDEntry(uint8_t instance) {
     for (int i = 0; i < MAX_HIDS; i++) {
         if (m_hids[i].used && m_hids[i].instance == instance) {
             m_hids[i].used = false;
+            switch (m_hids[i].report.type) {
+                case REPORT_TYPE_KEYBOARD:
+                    m_kbdReportHandler->removeDevice(instance);
+                    break;
+                case REPORT_TYPE_MOUSE:
+                    m_mouseReportHandler->removeDevice(instance);
+                    break;
+                case REPORT_TYPE_JOYSTICK:
+                    m_joystickReportHandler->removeDevice(instance);
+                    break;
+            }
         }
     }
 }

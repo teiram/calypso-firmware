@@ -56,6 +56,7 @@ add_library(mist STATIC
 	MistUSBMouseHandler.cxx
 	MistUSBJoystickHandler.cxx
         PS3USBHIDDriver.cxx
+        MistUtil.cxx
 	MistService.cxx)
 target_compile_options(mist PRIVATE
   "-DVDATE=\"\""

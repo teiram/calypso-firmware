@@ -1,6 +1,7 @@
 #include "hid.h"
 #include "MistUSBJoystickHandler.h"
 #include "MistUSBKeyboardHandler.h"
+#include "MistUSBMouseHandler.h"
 extern "C" {
     #include "mist-firmware/ini_parser.h"
 }
@@ -8,6 +9,7 @@ using namespace calypso;
 
 extern MistUSBJoystickHandler usbJoystickHandler;
 extern MistUSBKeyboardHandler usbKeyboardHandler;
+extern MistUSBMouseHandler usbMouseHandler;
 
 uint8_t joystick_count() {
 	return usbJoystickHandler.numDevices();
@@ -26,7 +28,7 @@ uint8_t get_keyboards() {
 }
 
 uint8_t get_mice() {
-	return 0;
+	return usbMouseHandler.numDevices();
 }
 
 void hid_joystick_button_remap_init() {
