@@ -347,13 +347,13 @@ int mist_loop() {
     cdc_control_poll();
     storage_control_poll();
 
-    joystick_poll();
     if (legacy_mode == LEGACY_MODE) {
         if (user_io_core_type() != CORE_TYPE_UNKNOWN) {
             set_legacy_mode(MIST_MODE);
         }
     } else {
         user_io_poll();
+        joystick_poll();
 
         // MJ: check for legacy core and switch support on
         if (user_io_core_type() == CORE_TYPE_UNKNOWN) {
