@@ -18,18 +18,28 @@ void InitDB9() {
 }
 
 char GetDB9(char index, unsigned char *joy_map) {
-    static char data = 0;
-    static int counter = 4;
-    if (!index) {
-        if (--counter == 0) {
-            data = joystick.read();
-            counter = 4;
-        }
+    static uint8_t counter = 0;
+    if (index == 0) {
+        *joy_map = joystick.read();
     }
-    *joy_map = data;
-    return 1;
+    return index == 0 ? 1 : 0;
 }
 
+/*
+char GetDB9(char index, unsigned char *joy_map) {
+    static int counter = 4;
+    if (index == 0) {
+        if (--counter == 0) {
+            joy0Value = joystick.read();
+            counter = 4;
+        }
+        *joy_map = joy0Value;
+        return 1;
+    } else {
+        return 0;
+    }
+}
+*/
 static uint8_t legacy_mode = 0;
 static void SetGpio(uint8_t usbjoy, uint8_t mask, uint8_t gpio) {}
 
