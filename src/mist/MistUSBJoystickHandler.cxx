@@ -10,6 +10,7 @@ extern "C" {
     #include "mist-firmware/user_io.h"
     #include "mist-firmware/state.h"
     #include "mist-firmware/mist_cfg.h"
+    #include "mist-firmware/usb/joymapping.h"
 }
 using namespace calypso;
 
@@ -42,6 +43,8 @@ bool MistUSBJoystickHandler::addDevice(uint8_t const deviceId, uint16_t vid, uin
             m_joysticks[i].report = report;
             m_joysticks[i].used = true;
            	StateNumJoysticksSet(m_numDevices);
+            StateUsbIdSet(vid, pid, report->joystick_mouse.button_count, 
+                m_joysticks[i].joyNumber);
             return true;
         }
     }
@@ -66,6 +69,9 @@ void MistUSBJoystickHandler::removeDevice(uint8_t const deviceId) {
         for (i = 0; i < MAX_JOYSTICKS; i++) {
             if (m_joysticks[i].used && m_joysticks[i].joyNumber > joystickNumberRemoved) {
                 m_joysticks[i].joyNumber -= 1;
+                StateUsbIdSet(m_joysticks[i].vid, m_joysticks[i].pid, 
+                    m_joysticks[i].report->joystick_mouse.button_count, 
+                     m_joysticks[i].joyNumber);
             }
         }
     }
@@ -95,7 +101,6 @@ bool MistUSBJoystickHandler::addButtonMapping(const char* s) {
 	if (strlen(s) < 13) {
 		return false;
 	}
-
 	// parse remap request
 	for (uint8_t i = 0; i < MAX_BUTTON_MAPPINGS; i++) {
 		if (!m_button_mappings[i].vid) {
@@ -120,8 +125,6 @@ void MistUSBJoystickHandler::updateJoystickStatus(uint8_t index, uint8_t const* 
 	int16_t a[MAX_AXES];
 
     for (uint8_t i = 0; i < MAX_AXES; i++) {
-		// if logical minimum is > logical maximum then logical minimum 
-		// is signed. This means that the value itself is also signed
 		bool isSigned = conf->joystick_mouse.axis[i].logical.min > 
 				conf->joystick_mouse.axis[i].logical.max;
 		a[i] = MistUtil::collectBits(report, conf->joystick_mouse.axis[i].offset, 
@@ -154,27 +157,8 @@ void MistUSBJoystickHandler::updateJoystickStatus(uint8_t index, uint8_t const* 
 	fullValue |= buttons << JOY_BTN_SHIFT;
     fullValue |= extraButtons << 8;
 
-    if (fullValue != m_joysticks[index].mistJoyStatus) {
-
-        uint8_t joyNumber = m_joysticks[index].joyNumber;
-        joyNumber = (joyNumber == 0) && mist_cfg.joystick0_prefer_db9 ? 1 : joyNumber;
-
-        USB_DEBUG_LOG(L_DEBUG, "New value %08x for joystick with number %d\n",
-            fullValue, joyNumber);
-        user_io_digital_joystick(joyNumber, fullValue & 0xff);
-        user_io_digital_joystick_ext(joyNumber, fullValue);
-
-        uint8_t osdJoyIndex = mist_cfg.joystick_db9_fixed_index ? joyNumber : numDevices();
-        USB_DEBUG_LOG(L_DEBUG, "Sending to OSD as index %d\n", osdJoyIndex);
-        //Send to OSD
-
-        StateUsbIdSet(m_joysticks[index].vid, m_joysticks[index].pid, 
-            conf->joystick_mouse.button_count, joyNumber);
-		StateUsbJoySet(fullValue & 0xff, extraButtons, joyNumber);
-        StateJoySet(fullValue, osdJoyIndex);
-		StateJoySetExtra(fullValue >> 8, osdJoyIndex);
-        m_joysticks[index].mistJoyStatus = fullValue;
-    }
+    //TODO: Maybe include hat support and some other weird stuff in MiST hid.c
+    m_joysticks[index].mistJoyStatus = fullValue;
 }
 
 void MistUSBJoystickHandler::handleReport(uint8_t const deviceId, uint8_t const* report, uint16_t length) {
@@ -199,21 +183,24 @@ void MistUSBJoystickHandler::updateJoysticks() {
         if (m_joysticks[i].used) {
             uint32_t value = m_joysticks[i].mistJoyStatus;
             uint8_t joyNumber = m_joysticks[i].joyNumber;
-            joyNumber = (joyNumber == 0 && mist_cfg.joystick0_prefer_db9) ? 1 : joyNumber;
+            joyNumber += mist_cfg.joystick0_prefer_db9 ? 1 : 0;
 
             USB_DEBUG_LOG(L_DEBUG, "New value %08x for joystick with number %d\n",
                 value, joyNumber);
             user_io_digital_joystick(joyNumber, value & 0xff);
             user_io_digital_joystick_ext(joyNumber, value);
 
-            uint8_t osdJoyIndex = mist_cfg.joystick_db9_fixed_index ? joyNumber : numDevices();
-            //Send to OSD
-
             StateUsbIdSet(m_joysticks[i].vid, m_joysticks[i].pid, 
                 m_joysticks[i].report->joystick_mouse.button_count, joyNumber);
 		    StateUsbJoySet(value & 0xff, value >> 8, joyNumber);
+
+            //Send to OSD
+            uint8_t osdJoyIndex = mist_cfg.joystick_db9_fixed_index ? joyNumber + 1: joyNumber;
             StateJoySet(value, osdJoyIndex);
 		    StateJoySetExtra(value >> 8, osdJoyIndex);
+
+            //Use as OSD menu control
+            virtual_joystick_keyboard(value);
         }
     }
 }
