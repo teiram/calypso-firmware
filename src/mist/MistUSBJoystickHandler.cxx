@@ -32,6 +32,22 @@ MistUSBJoystickHandler::MistUSBJoystickHandler():
     }
 }
 
+void MistUSBJoystickHandler::applyRemapIfAvailable(uint8_t index) {
+    for (uint8_t i = 0; i < MAX_BUTTON_MAPPINGS; i++) {
+	    if (m_button_mappings[i].vid == m_joysticks[index].vid && 
+            m_button_mappings[i].pid == m_joysticks[index].pid) {
+			uint8_t button = m_button_mappings[i].button;
+            hid_report_t *report = m_joysticks[i].report;
+            report->joystick_mouse.button[button].byte_offset = m_button_mappings[i].offset >> 3;
+			report->joystick_mouse.button[button].bitmask = 0x80 >> (m_button_mappings[i].offset & 7);
+            USB_DEBUG_LOG(L_INFO, "Applying mapping from ini file %d %d -> %d\n",
+                report->joystick_mouse.button[button].byte_offset,
+                report->joystick_mouse.button[button].bitmask,
+                button);
+		}
+    }
+}
+
 bool MistUSBJoystickHandler::addDevice(uint8_t const deviceId, uint16_t vid, uint16_t pid,
     hid_report_t *report) {
     for (uint8_t i = 0; i < MAX_JOYSTICKS; i++) {
@@ -42,6 +58,7 @@ bool MistUSBJoystickHandler::addDevice(uint8_t const deviceId, uint16_t vid, uin
             m_joysticks[i].joyNumber = m_numDevices++;
             m_joysticks[i].report = report;
             m_joysticks[i].used = true;
+            applyRemapIfAvailable(i);
            	StateNumJoysticksSet(m_numDevices);
             StateUsbIdSet(vid, pid, report->joystick_mouse.button_count, 
                 m_joysticks[i].joyNumber);
@@ -50,7 +67,6 @@ bool MistUSBJoystickHandler::addDevice(uint8_t const deviceId, uint16_t vid, uin
     }
     return false;
 }
-
 
 void MistUSBJoystickHandler::removeDevice(uint8_t const deviceId) {
     int8_t joystickNumberRemoved = -1;
@@ -97,7 +113,7 @@ void MistUSBJoystickHandler::clearButtonMappings() {
 }
 
 bool MistUSBJoystickHandler::addButtonMapping(const char* s) {
-
+    USB_DEBUG_LOG(L_INFO, "Adding button mapping\n");
 	if (strlen(s) < 13) {
 		return false;
 	}
@@ -131,11 +147,6 @@ void MistUSBJoystickHandler::updateJoystickStatus(uint8_t index, uint8_t const* 
 			conf->joystick_mouse.axis[i].size, isSigned);
 	}
     for (uint8_t i = 0; i < 4; i++) {
-        USB_DEBUG_LOG(L_TRACE, "Checking for button %d, with byte offset %d and bitmask %d on 0x%02x\n",
-            i,
-            conf->joystick_mouse.button[i].byte_offset,
-            conf->joystick_mouse.button[i].bitmask,
-            report[conf->joystick_mouse.button[i].byte_offset]);
 		if (report[conf->joystick_mouse.button[i].byte_offset] & 
 		    conf->joystick_mouse.button[i].bitmask) {
             buttons |= 1 << i;
@@ -182,22 +193,24 @@ void MistUSBJoystickHandler::updateJoysticks() {
     for (uint8_t i = 0; i < MAX_JOYSTICKS; i++) {
         if (m_joysticks[i].used) {
             uint32_t value = m_joysticks[i].mistJoyStatus;
+            uint32_t mappedValue = virtual_joystick_mapping(m_joysticks[i].vid, m_joysticks[i].pid, value);
             uint8_t joyNumber = m_joysticks[i].joyNumber;
             joyNumber += mist_cfg.joystick0_prefer_db9 ? 1 : 0;
 
-            USB_DEBUG_LOG(L_DEBUG, "New value %08x for joystick with number %d\n",
-                value, joyNumber);
-            user_io_digital_joystick(joyNumber, value & 0xff);
-            user_io_digital_joystick_ext(joyNumber, value);
-
+            //Report joystick status
             StateUsbIdSet(m_joysticks[i].vid, m_joysticks[i].pid, 
                 m_joysticks[i].report->joystick_mouse.button_count, joyNumber);
 		    StateUsbJoySet(value & 0xff, value >> 8, joyNumber);
 
             //Send to OSD
             uint8_t osdJoyIndex = mist_cfg.joystick_db9_fixed_index ? joyNumber + 1: joyNumber;
-            StateJoySet(value, osdJoyIndex);
-		    StateJoySetExtra(value >> 8, osdJoyIndex);
+            StateJoySet(mappedValue, osdJoyIndex);
+		    StateJoySetExtra(mappedValue >> 8, osdJoyIndex);
+
+            USB_DEBUG_LOG(L_TRACE, "New value %08x for joystick with number %d\n",
+                mappedValue, joyNumber);
+            user_io_digital_joystick(joyNumber, mappedValue & 0xff);
+            user_io_digital_joystick_ext(joyNumber, mappedValue);
 
             //Use as OSD menu control
             virtual_joystick_keyboard(value);

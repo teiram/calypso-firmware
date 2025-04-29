@@ -16,6 +16,7 @@ namespace calypso {
         bool addButtonMapping(const char* s);
         void clearButtonMappings();
     private:
+        void applyRemapIfAvailable(uint8_t index);
         int8_t getJoystickIndex(uint8_t deviceId) const;
         void updateJoystickStatus(uint8_t deviceId, uint8_t const* report, uint16_t length);
         uint16_t collectBits(uint8_t const* data, uint16_t offset, uint8_t size, bool isSigned);
