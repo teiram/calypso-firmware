@@ -313,11 +313,12 @@ bool SPISDCard::readSectorTry(uint32_t lba, uint8_t *data) {
         m_spi.recv(data, 512);
     }
 
-    uint8_t crc[2];
-    m_spi.recv(crc, 2);
     if (data == 0) {
         gpio_put(m_directModeGPIO, 1);
     }
+
+    uint8_t crc[2];
+    m_spi.recv(crc, 2);
 
     toggleSelect(1);
 
