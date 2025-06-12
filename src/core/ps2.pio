@@ -82,7 +82,7 @@ static inline void ps2_program_init(PIO pio, uint sm, uint offset, uint8_t pin_c
     /* STATUS will be true when the TX fifo is empty => nothing to send */  
     sm_config_set_mov_status(&c, STATUS_TX_LESSTHAN, 1);
 
-    float div = (float) clock_get_hz(clk_sys) / 1000000; /* SPI clock at 1Mhz */
+    float div = (float) clock_get_hz(clk_sys) / 1000000; /* PIO clock at 1Mhz */
     sm_config_set_clkdiv(&c, div);
 
     pio_sm_init(pio, sm, offset, &c);

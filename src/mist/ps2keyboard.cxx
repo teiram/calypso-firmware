@@ -1,5 +1,5 @@
 #include "ps2keyboard.h"
-#include "PS2Device.h"
+#include "PS2Keyboard.h"
 #include <cstdio>
 #include <cstring>
 #include "calypso-debug.h"
@@ -286,7 +286,14 @@ static const uint16_t ps2_ext_translations[] = {
 };
 
 using namespace calypso;
-extern PS2Device keyboard;
+extern PS2Keyboard keyboard;
+
+extern bool caps_status;
+extern bool num_status;
+extern bool scrl_status;
+static bool last_caps_status;
+static bool last_num_status;
+static bool last_scrl_status;
 
 static uint8_t keyReport[KBD_REPORT_LENGTH];
 static uint8_t keyReportClone[KBD_REPORT_LENGTH]; //Since mist_user_io might modify the report
@@ -345,6 +352,18 @@ void ps2keyboard_poll() {
         memcpy(keyReportClone, keyReport, KBD_REPORT_LENGTH);
         PS2_DEBUG_DUMP(L_DEBUG, "PS2", keyReportClone, KBD_REPORT_LENGTH);
         user_io_kbd(modifiers, keyReportClone, UIO_PRIORITY_KEYBOARD, 0, 0);
+    }
+    if (caps_status != last_caps_status ||
+        scrl_status != last_scrl_status ||
+        num_status != last_num_status) {
+            uint8_t value = (caps_status ? PS2Keyboard::BIT_SHIFT_LOCK : 0) |
+                (scrl_status ? PS2Keyboard::BIT_SCROLL_LOCK : 0) |
+                (num_status ? PS2Keyboard::BIT_NUMBER_LOCK : 0);
+        if (keyboard.setLeds(value)) {
+            last_caps_status = caps_status;
+            last_scrl_status = scrl_status;
+            last_num_status = num_status;
+        }
     }
 }
 

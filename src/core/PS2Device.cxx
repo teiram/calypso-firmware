@@ -1,6 +1,7 @@
 #include "PS2Device.h"
 #include "ps2.pio.h"
 #include "calypso-debug.h"
+#include "pico/time.h"
 
 using namespace calypso;
 
@@ -35,6 +36,7 @@ static void ps2IrqCallback(void) {
                 uint32_t value = pio_sm_get_blocking(pio0, context->sm);
                 if (!context->fifo->full()) {
                     //Value needs to be decoded (PIO collects CLK and DATA samples)
+
                     context->fifo->write(decode(value));
                 }
             }
@@ -50,6 +52,8 @@ PS2Device::PS2Device(PIOContext& pio, CircularBuffer<uint8_t>& fifo, uint8_t clk
     m_clkGpio(clkGpio) {}
 
 bool PS2Device::init() {
+
+
     if (!PIO_INITIALIZED) {
         if (pio_add_program_at_offset(pio0, &ps2_program, 0) >= 0) {
 #ifdef USE_PIO_INTERRUPTS
@@ -66,6 +70,8 @@ bool PS2Device::init() {
     pio_set_irq0_source_enabled(pio0, pio_get_rx_fifo_not_empty_interrupt_source(m_pio.sm), true);
 #endif
     ps2_program_init(pio0, m_pio.sm, 0, m_clkGpio);
+    gpio_pull_up(m_clkGpio);
+    gpio_pull_up(m_clkGpio + 1);
     return true;
 }
 
@@ -107,6 +113,15 @@ inline uint8_t PS2Device::parity(uint8_t value) {
 
 void PS2Device::putData(uint8_t value) {
     if (!pio_sm_is_tx_fifo_full(pio0, m_pio.sm)) {
+        gpio_pull_up(m_clkGpio);
+        gpio_pull_up(m_clkGpio + 1);
         pio_sm_put_blocking(pio0, m_pio.sm, value | (parity(value) << 8));
     }
+}
+
+bool PS2Device::waitDataAvailableWithTimeout(uint8_t size, uint16_t timeout) {
+    while (available() < size && --timeout) {
+        sleep_ms(50);
+    }
+    return timeout > 0;
 }

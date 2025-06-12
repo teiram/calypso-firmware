@@ -13,7 +13,6 @@ namespace calypso {
         static constexpr uint8_t SET_SAMPLE_RATE = 0xf3;
         static constexpr uint8_t ENABLE = 0xf4;
         static constexpr uint8_t ACK_OK = 0xfa;
-        bool waitDataAvailableWithTimeout(uint8_t size, uint16_t timeout);
         bool enable();
         bool reset();
         bool setSampleRate(uint8_t sampleRate);

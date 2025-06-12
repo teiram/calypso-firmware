@@ -7,12 +7,6 @@ using namespace calypso;
 PS2Mouse::PS2Mouse(PIOContext& pio, CircularBuffer<uint8_t>& fifo, uint8_t clkGpio):
     PS2Device(pio, fifo, clkGpio) {}
 
-bool PS2Mouse::waitDataAvailableWithTimeout(uint8_t size, uint16_t timeout) {
-    while (available() < size && --timeout) {
-        sleep_ms(50);
-    }
-    return timeout > 0;
-}
 
 bool PS2Mouse::enable() {
     putData(ENABLE);

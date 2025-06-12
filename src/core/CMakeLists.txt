@@ -3,6 +3,7 @@ add_library(core STATIC
 	SPIDevice.cxx
 	PS2Device.cxx
 	PS2Mouse.cxx
+	PS2Keyboard.cxx
 	JTAG.cxx
 	SPISDCard.cxx
 	Service.cxx

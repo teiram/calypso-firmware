@@ -7,7 +7,7 @@
 #include "Joystick.h"
 #include "SPISDCard.h"
 #include "Service.h"
-#include "PS2Device.h"
+#include "PS2Keyboard.h"
 #include "PS2Mouse.h"
 #include "mist/MistService.h"
 #include "USBService.h"
@@ -29,7 +29,7 @@ PIOContext kbdPio = {
     .sm = 0,
     .fifo = &kbdFifo
 };
-PS2Device keyboard(kbdPio, kbdFifo, Configuration::GPIO_PS2_CLK1);
+PS2Keyboard keyboard(kbdPio, kbdFifo, Configuration::GPIO_PS2_CLK1);
 
 uint8_t mouseBuffer[8];
 CircularBuffer<uint8_t> mouseFifo(mouseBuffer, 8);

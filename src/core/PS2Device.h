@@ -18,9 +18,9 @@ namespace calypso {
         static bool PIO_INITIALIZED;
         uint8_t m_clkGpio;
         PIOContext &m_pio;
-        inline uint8_t parity(uint8_t value);
     protected:
         CircularBuffer<uint8_t> &m_fifo;
+        bool waitDataAvailableWithTimeout(uint8_t size, uint16_t timeout);
     public:
         PS2Device(PIOContext &pio, CircularBuffer<uint8_t>& fifo, uint8_t clkGpio);
         virtual bool init();
@@ -29,6 +29,7 @@ namespace calypso {
         uint8_t available();
         uint8_t getData();
         void putData(uint8_t value);
+        static inline uint8_t parity(uint8_t value);
     };
 }
 #endif //PS2_DEVICE_H
