@@ -1,3 +1,3 @@
 [submodule "libs/mist-firmware"]
 	path = libs/mist-firmware
-	url = https://github.com/mist-devel/mist-firmware.git
+	url = https://github.com/teiram/mist-firmware.git

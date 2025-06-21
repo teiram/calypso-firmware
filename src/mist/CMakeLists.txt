@@ -13,14 +13,13 @@ add_library(mist STATIC
 	ps2mouse.cxx
 	usbdev.c
 	compat.c
-	dataio.c
 	${MIST_FW_PATH}/arc_file.c
 	${MIST_FW_PATH}/archie.c
 	${MIST_FW_PATH}/boot.c
 	${MIST_FW_PATH}/cdc_control.c
 	${MIST_FW_PATH}/config.c
 	${MIST_FW_PATH}/cue_parser.c
-	data_io.c
+	${MIST_FW_PATH}/data_io.c
 	${MIST_FW_PATH}/fat_compat.c
 	${MIST_FW_PATH}/fdd.c
 	${MIST_FW_PATH}/font.c
@@ -51,12 +50,13 @@ add_library(mist STATIC
 	${MIST_FW_PATH}/FatFs/ffunicode.c
 	${MIST_FW_PATH}/usb/joymapping.c
 	${MIST_FW_PATH}/usb/hidparser.c
+	ace_processor.c
 	MistHIDUSBController.cxx
 	MistUSBKeyboardHandler.cxx
 	MistUSBMouseHandler.cxx
 	MistUSBJoystickHandler.cxx
-        PS3USBHIDDriver.cxx
-        MistUtil.cxx
+    PS3USBHIDDriver.cxx
+    MistUtil.cxx
 	MistService.cxx)
 target_compile_options(mist PRIVATE
   "-DVDATE=\"\""

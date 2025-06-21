@@ -24,6 +24,7 @@
 #include "mist-firmware/cdc_control.h"
 #include "hardware/watchdog.h"
 #include "joystick.h"
+#include "ace_processor.h"
 
 const char version[] = {"$VER:ATH" VDATE};
 
@@ -229,6 +230,7 @@ int mist_init() {
     DISKLED_ON;
 
 
+    
     Timer_Init();
     USART_Init(115200);
 
@@ -309,6 +311,11 @@ int mist_init() {
 
     printf("user_io_init()\n");
     user_io_init();
+
+    printf("data_io_init()\n");
+    data_io_init();
+
+    ace_processor_register();
 
     // tos config also contains cdc redirect settings used by minimig
     printf("tos_config_load()\n");
