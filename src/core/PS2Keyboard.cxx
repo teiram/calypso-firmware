@@ -1,5 +1,7 @@
 #include "PS2Keyboard.h"
 #include "calypso-debug.h"
+#include "pico/time.h"
+
 
 using namespace calypso;
 
@@ -8,6 +10,7 @@ PS2Keyboard::PS2Keyboard(PIOContext& pio, CircularBuffer<uint8_t>& fifo, uint8_t
 
 bool PS2Keyboard::init() {
     if (PS2Device::init()) {
+        sleep_ms(500); //Needed to give the keyboard time to start
         m_fifo.clear();
         setLeds(PS2Keyboard::BIT_SCROLL_LOCK);
         return true;
