@@ -10,6 +10,7 @@ add_library(core STATIC
 	Joystick.cxx
 	USBService.cxx
 	Util.cxx
+	Button.cxx
 )
 
 target_include_directories(core PRIVATE .)

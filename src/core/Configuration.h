@@ -33,6 +33,8 @@ public:
     static constexpr uint8_t GPIO_MIST_OSD    = 16;
     static constexpr uint8_t GPIO_MIST_DMODE  = 13;
 
+    static constexpr uint8_t GPIO_USER_BUTTON = 24;
+
     static constexpr uint8_t MASK_JOY_RIGHT = 0x01;
     static constexpr uint8_t MASK_JOY_LEFT = 0x02;
     static constexpr uint8_t MASK_JOY_DOWN = 0x04;

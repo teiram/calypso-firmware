@@ -70,7 +70,6 @@ void InitADC(void);
 void PollADC();
 
 unsigned char Buttons();
-unsigned char MenuButton();
 unsigned char UserButton();
 
 void InitDB9();

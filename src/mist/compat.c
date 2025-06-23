@@ -4,6 +4,7 @@
 #include "pico/bootrom.h"
 #include "mist-firmware/errors.h"
 #include "hardware.h"
+#include "buttons.h"
 #include "mist-firmware/user_io.h"
 #include "mist-firmware/data_io.h"
 #include "mist-firmware/fat_compat.h"
@@ -145,21 +146,15 @@ int GetRTTC() {
     return time_us_64() / 1000;
 }
 
-
 //-------------------------------------------------------------
 // Buttons support
-// Disabled so far, but we could support RP2040 button USR
 //-------------------------------------------------------------
 unsigned long CheckButton(void) {
     return MenuButton();
 }
 
 unsigned char Buttons() {
-    return 0;
-}
-
-unsigned char MenuButton() {
-    return 0;
+    return MenuButton();
 }
 
 unsigned char UserButton() {

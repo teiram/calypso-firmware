@@ -11,6 +11,7 @@ add_library(mist STATIC
 	hid.cxx
 	ps2keyboard.cxx
 	ps2mouse.cxx
+	buttons.cxx
 	usbdev.c
 	compat.c
 	${MIST_FW_PATH}/arc_file.c
