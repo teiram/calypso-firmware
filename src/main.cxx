@@ -1,6 +1,6 @@
 #include <cstdio>
 #include "pico/stdlib.h"
-
+#include "pico/multicore.h"
 #include "Configuration.h"
 #include "SPIDevice.h"
 #include "JTAG.h"
@@ -48,6 +48,14 @@ Button userButton(Configuration::GPIO_USER_BUTTON);
 MistService mistService(Configuration::GPIO_MIST_USERIO, Configuration::GPIO_MIST_DATAIO,
     Configuration::GPIO_MIST_OSD, Configuration::GPIO_MIST_DMODE);
 
+
+static void device_init() {
+    printf("Initializing devices under core1\n");
+    keyboard.init();
+    mouse.init();
+    printf("Devices initialized\n");
+}
+
 int main() {
     stdio_init_all();
 
@@ -55,9 +63,8 @@ int main() {
     Service::registerService(&mistService);
 
     spi.init();
-    keyboard.init();
-    mouse.init();
     userButton.init();
+    multicore_launch_core1(&device_init);
 
     printf("Initializing services...\n");
     for (int i = 0; i < Service::serviceCount; i++) {
