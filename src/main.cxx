@@ -49,12 +49,14 @@ MistService mistService(Configuration::GPIO_MIST_USERIO, Configuration::GPIO_MIS
     Configuration::GPIO_MIST_OSD, Configuration::GPIO_MIST_DMODE);
 
 
+#if 0
 static void device_init() {
     printf("Initializing devices under core1\n");
     keyboard.init();
     mouse.init();
     printf("Devices initialized\n");
 }
+#endif
 
 int main() {
     stdio_init_all();
@@ -63,9 +65,17 @@ int main() {
     Service::registerService(&mistService);
 
     spi.init();
+    //Multicore initialization only works from cold reset
+    //for some unknown reason
+#if 1
     userButton.init();
+    keyboard.init();
+    mouse.init();
+#else
+    multicore_reset_core1();
+    sleep_ms(100);
     multicore_launch_core1(&device_init);
-
+#endif
     printf("Initializing services...\n");
     for (int i = 0; i < Service::serviceCount; i++) {
         Service *s = Service::services[i];
