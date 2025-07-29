@@ -17,6 +17,7 @@ add_library(mist STATIC
 	${MIST_FW_PATH}/arc_file.c
 	${MIST_FW_PATH}/archie.c
 	${MIST_FW_PATH}/boot.c
+	${MIST_FW_PATH}/c64files.c
 	${MIST_FW_PATH}/cdc_control.c
 	${MIST_FW_PATH}/config.c
 	${MIST_FW_PATH}/cue_parser.c

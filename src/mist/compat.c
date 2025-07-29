@@ -23,6 +23,7 @@
 #include "mist-firmware/fpga.h"
 #include "mist-firmware/config.h"
 #include "mist-firmware/cdc_control.h"
+#include "mist-firmware/c64files.h"
 #include "hardware/watchdog.h"
 #include "joystick.h"
 #include "ace_processor.h"
@@ -311,6 +312,8 @@ int mist_init() {
     data_io_init();
 
     ace_processor_register();
+
+    c64files_init();
 
     // tos config also contains cdc redirect settings used by minimig
     printf("tos_config_load()\n");
