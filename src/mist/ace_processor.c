@@ -2,7 +2,7 @@
 #include "fat_compat.h"
 #include "data_io.h"
 
-static void uncompress_send_ace(FIL *file) {
+static void uncompress_send_ace(FIL *file, int index, const char *name, const char *ext) {
     FSIZE_t bytes2read = f_size(file);
     UINT br;
 
@@ -11,6 +11,7 @@ static void uncompress_send_ace(FIL *file) {
     uint8_t count = 0;
     uint32_t sentbytes = 0;
     bool eofmark = false;
+    data_io_file_tx_prepare(file, index, "ACE");
     while (bytes2read && !eofmark) {
         uint16_t chunk = bytes2read > SECTOR_BUFFER_SIZE ? SECTOR_BUFFER_SIZE : bytes2read;
         DISKLED_ON
@@ -49,6 +50,7 @@ static void uncompress_send_ace(FIL *file) {
         DisableFpga();
     }
     iprintf("Sent %d bytes\n", sentbytes);
+    data_io_file_tx_done();
 }
 
 data_io_processor_t ACE_PROCESSOR = {
