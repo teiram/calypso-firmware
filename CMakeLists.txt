@@ -9,6 +9,8 @@ set(CMAKE_BUILD_TYPE RELEASE)
 
 #set(LOG 3)
 
+set(FVERSION "0.15")
+
 include(pico_sdk_import.cmake)
 
 project(${PROGRAM_NAME})

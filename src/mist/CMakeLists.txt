@@ -3,6 +3,8 @@ set (MIST_FW_PATH ../../libs/mist-firmware)
 #Assumed by mist firmware
 add_compile_options(-fsigned-char)
 
+string(TIMESTAMP TODAY "%Y%m%d")
+
 add_library(mist STATIC
 	db9.cxx
 	mmc.cxx
@@ -61,7 +63,8 @@ add_library(mist STATIC
     MistUtil.cxx
 	MistService.cxx)
 target_compile_options(mist PRIVATE
-  "-DVDATE=\"\""
+  "-DVDATE=\"${TODAY}\""
+  "-DVFIRM=\"${FVERSION}\""
   "-DMIST"
   "-DMIST_ROOT=\"/\""
   "-DCOREEXT=\"RBF\""

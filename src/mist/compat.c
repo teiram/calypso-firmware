@@ -28,11 +28,7 @@
 #include "joystick.h"
 #include "ace_processor.h"
 
-const char version[] = {"$VER:ATH" VDATE};
-
-#define VERSION_MAJOR	2
-#define VERSION_MINOR	7
-#define VERSION "2.7"
+const char version[] = {"$VER:CLP-" VFIRM};
 
 unsigned char Error;
 char s[FF_LFN_BUF + 1];
@@ -70,12 +66,8 @@ uint8_t get_pl2303s(void) {
     return 0;
 }
 
-#define ARCH "CALYPSO"
-
-static char firmwareVersion[] = "v" VERSION "-" ARCH;
-
 char *GetFirmwareVersion(char *name) {
-    return firmwareVersion;
+    return NULL;
 }
 
 unsigned char CheckFirmware(char *name) {
@@ -84,7 +76,7 @@ unsigned char CheckFirmware(char *name) {
   // ERROR_NONE
   // ERROR_FILE_NOT_FOUND
   // ERROR_INVALID_DATA
-  return 1;
+  return ERROR_NONE;
 }
 
 // This is handled in our mist service
