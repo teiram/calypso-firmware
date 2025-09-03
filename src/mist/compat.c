@@ -224,6 +224,7 @@ int mist_init() {
 
     iprintf("Minimig by Dennis van Weeren\n");
     iprintf("ARM Controller by Jakub Bednarski\n");
+    iprintf("Calypso integration (rp2040) by Manu Teira\n");
     iprintf("Version %s\n", version+5);
 
     usb_init();
