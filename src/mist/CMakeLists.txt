@@ -11,8 +11,8 @@ add_library(mist STATIC
 	spi.cxx
 	fpga.cxx
 	hid.cxx
-	ps2keyboard.cxx
-	ps2mouse.cxx
+	ps2_keyboard.cxx
+	ps2_mouse.cxx
 	buttons.cxx
 	usbdev.c
 	compat.c

@@ -1,4 +1,4 @@
-#include "ps2mouse.h"
+#include "ps2_mouse.h"
 #include "PS2Device.h"
 #include "calypso-debug.h"
 
