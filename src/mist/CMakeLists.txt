@@ -1,7 +1,10 @@
 set (MIST_FW_PATH ../../libs/mist-firmware)
 
 #Assumed by mist firmware
-add_compile_options(-fsigned-char)
+add_compile_options(-fsigned-char 
+	-Wno-error=implicit-function-declaration
+	-Wno-error=incompatible-pointer-types
+)
 
 string(TIMESTAMP TODAY "%Y%m%d")
 
