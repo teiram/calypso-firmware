@@ -7,7 +7,7 @@ add_library(core STATIC
 	JTAG.cxx
 	SPISDCard.cxx
 	Service.cxx
-	Joystick.cxx
+	DB9Joystick.cxx
 	USBService.cxx
 	Util.cxx
 	Button.cxx

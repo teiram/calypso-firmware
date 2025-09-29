@@ -11,6 +11,7 @@
 #include "mmc.h"
 #include "db9.h"
 #include "spi.h"
+#include "hid.h"
 #include "ps2_keyboard.h"
 #include "ps2_mouse.h"
 #include "mist-firmware/FatFs/diskio.h"

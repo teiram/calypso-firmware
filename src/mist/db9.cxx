@@ -1,5 +1,5 @@
 #include "db9.h"
-#include "Joystick.h"
+#include "DB9Joystick.h"
 #include <inttypes.h>
 
 #define DB9_UP          0x08
@@ -11,7 +11,7 @@
 
 using namespace calypso;
 
-extern Joystick joystick;
+extern DB9Joystick joystick;
 
 void InitDB9() {
     joystick.init();

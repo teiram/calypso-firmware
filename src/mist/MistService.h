@@ -4,7 +4,7 @@
 #include "Service.h"
 #include "SPIDevice.h"
 #include "JTAG.h"
-#include "Joystick.h"
+#include "DB9Joystick.h"
 #include <cinttypes>
 
 namespace calypso {

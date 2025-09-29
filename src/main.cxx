@@ -4,7 +4,7 @@
 #include "Configuration.h"
 #include "SPIDevice.h"
 #include "JTAG.h"
-#include "Joystick.h"
+#include "DB9Joystick.h"
 #include "Button.h"
 #include "SPISDCard.h"
 #include "Service.h"
@@ -20,7 +20,7 @@ SPIDevice spi(spi0, Configuration::GPIO_SPI_SCK, Configuration::GPIO_SPI_MISO, C
 JTAG jtag(Configuration::GPIO_JTAG_TDO, Configuration::GPIO_JTAG_TDI,
     Configuration::GPIO_JTAG_TCK, Configuration::GPIO_JTAG_TMS);
 
-Joystick joystick;
+DB9Joystick joystick;
 
 SPISDCard sdcard(spi, Configuration::GPIO_SD_SEL, Configuration::GPIO_MIST_DMODE);
 
