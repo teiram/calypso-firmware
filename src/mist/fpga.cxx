@@ -8,7 +8,8 @@ using namespace calypso;
 extern JTAG jtag;
 constexpr char MENU_NAME_CALYPSO[] = "CORE.CALYPSO.RBF";
 constexpr char MENU_NAME_GENERIC[] = "CORE.RBF";
-constexpr char MENU_NAME_XILINX[] = "CORE.BIN";
+constexpr char MENU_NAME_XILINX[] = "CORE.BIT";
+constexpr char XILINX_EXT[] = ".BIT";
 
 static FRESULT getCoreFile(const char *name, FIL *fd, const char **openedFileName) {
     FRESULT result;
@@ -36,7 +37,7 @@ unsigned char ConfigureFpga(const char *bitfile) {
         printf("FPGA bitstream file %s opened, file size = %ld\n", filename, size);
         uint8_t buffer[512];
         uint readBytes;
-        bool xilinx = strstr(filename, ".BIN") == filename + strlen(filename) - 4;
+        bool xilinx = strstr(filename, XILINX_EXT) == filename + strlen(filename) - 4;
         printf("Using Xilinx mode: %d\n", xilinx);
         if (xilinx) {
             jtag.startProgramXilinx();
