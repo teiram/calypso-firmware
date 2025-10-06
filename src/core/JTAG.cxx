@@ -68,6 +68,15 @@ void JTAG::reset() {
     }
 }
 
+inline void JTAG::enterRti() {
+    tmsPush(0);
+}
+
+inline void JTAG::enterSelectIr() {
+    tmsPush(1);
+    tmsPush(1);
+}
+
 inline void JTAG::enterSelectDr() {
     tmsPush(0);
     tmsPush(1); 
@@ -134,6 +143,40 @@ int JTAG::getChainLength() {
     }
     exitShift();
     return i;
+}
+
+void JTAG::startProgramXilinx() {
+    enable();
+    reset();
+
+    //Move into RTI
+    enterRti();
+
+    //Move into SELECT-IR
+    enterSelectIr();
+ 
+    //Move into SHIFT-IR
+    tmsPush(0);
+    tmsPush(0);
+
+    //Start loading CFG_I instruction (00000101) LSB First:
+    tdiPush(1);
+    tdiPush(0);
+    tdiPush(1);
+    tdiPush(0);
+    tdiPush(0);
+
+    // Load the MSG of the JPROGRAM instruction when exiting SHIFT-IR
+    gpio_put(m_tms, 1);
+    tdiPush(0);
+
+    // Enter SELECT-DR
+    tmsPush(1);
+    tmsPush(1);
+
+    // Enter SHIFT-DR
+    tmsPush(0);
+    tmsPush(0);
 }
 
 void JTAG::startProgram() {
@@ -220,6 +263,52 @@ void JTAG::endProgram() {
     }
     reset();
     disable();
+}
+
+void JTAG::endProgramXilinx() {
+
+    //Enter UPDATE-DR
+    tmsPush(1);
+
+    //Enter RTI
+    tmsPush(0);
+
+    //Enter Select-IR
+    tmsPush(1);
+    tck();
+
+    //Enter SHIFT-IR
+    tmsPush(0);
+    tck();
+
+    //Start loading the JSTART instruction 
+    //(001100) (optional). The JSTART instruction  01100   0   5
+    //initializes the startup sequence.
+    tdiPush(0);
+    tck();
+    tdiPush(1);
+    tck();
+    tdiPush(0);
+
+    // Load the last bit of the JSTART instruction (tdi already zero)
+    tmsPush(1);
+    tck();
+  
+    // Move to the UPDATE-IR state.
+    tmsPush(1);
+
+  
+    // Move to the RTI state and clock the
+    // startup sequence by applying a minimum 
+    // of 16 clock cycles to the TCK.
+    tmsPush(0);
+    for (int i = 0; i < 100; i++) {
+        tck();
+    }
+
+    // Move to the TLR state. The device is now functional.
+    tmsPush(1);
+    tck();
 }
 
 void JTAG::programPostamble() {

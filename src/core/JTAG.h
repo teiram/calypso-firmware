@@ -35,6 +35,8 @@ namespace calypso {
         void enterSelectDr();
         void enterShiftIr();
         void enterShiftDr();
+        void enterRti();
+        void enterSelectIr();
         void exitShift();
         void readDr(int length);
         void read(idcode_t* value, int length);
@@ -44,6 +46,8 @@ namespace calypso {
 
         void startProgram();
         void endProgram();
+        void startProgramXilinx();
+        void endProgramXilinx();
         void programPostamble();
         void programChunk(uint8_t *data, uint16_t length);
         int scan();
