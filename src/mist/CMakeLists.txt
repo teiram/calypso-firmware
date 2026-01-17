@@ -17,6 +17,7 @@ add_library(mist STATIC
 	ps2_keyboard.cxx
 	ps2_mouse.cxx
 	buttons.cxx
+	midireceiver.cxx
 	usbdev.c
 	compat.c
 	${MIST_FW_PATH}/arc_file.c
@@ -48,6 +49,7 @@ add_library(mist STATIC
 	${MIST_FW_PATH}/swap.c
 	${MIST_FW_PATH}/tos.c
 	${MIST_FW_PATH}/user_io.c
+	${MIST_FW_PATH}/serial_sink.c
 	${MIST_FW_PATH}/utils.c
 	${MIST_FW_PATH}/xmodem.c
 	${MIST_FW_PATH}/zx_col.c
@@ -84,4 +86,12 @@ target_include_directories(mist PRIVATE
 	../../libs/mist-firmware/arch
 	../../libs/mist-firmware/usb
 	usbhost)
-target_link_libraries(mist pico_stdio_uart pico_stdlib hardware_spi hardware_pio tinyusb_board tinyusb_host)
+target_link_libraries(mist
+	pico_stdio_uart
+	pico_stdlib
+	hardware_spi
+	hardware_pio
+	tinyusb_board
+	tinyusb_host
+	pico_audio
+)

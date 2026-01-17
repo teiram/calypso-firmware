@@ -5,8 +5,10 @@
 #include "mist-firmware/errors.h"
 #include "hardware.h"
 #include "buttons.h"
+#include "midireceiver.h"
 #include "mist-firmware/user_io.h"
 #include "mist-firmware/data_io.h"
+#include "mist-firmware/serial_sink.h"
 #include "mist-firmware/fat_compat.h"
 #include "mmc.h"
 #include "db9.h"
@@ -30,6 +32,7 @@
 #include "ace_processor.h"
 
 const char version[] = {"$VER:CLP-" VFIRM};
+static serial_sink_t midi_sink = {1, 8, 0, &midi_byte_processor, 0};
 
 unsigned char Error;
 char s[FF_LFN_BUF + 1];
@@ -299,6 +302,8 @@ int mist_init() {
     printf("font_load()\n");
     font_load();
 
+    serial_sink_init();
+    serial_sink_register(&midi_sink);
     printf("user_io_init()\n");
     user_io_init();
 
@@ -388,5 +393,4 @@ int mist_loop() {
     }
     return 0;
 }
-
 
