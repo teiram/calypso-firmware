@@ -73,4 +73,15 @@
     #define PS2_DEBUG_DUMP
 #endif //DEBUG_PS2
 
+#ifdef DEBUG_MIDI
+    #ifndef DEBUG_MIDI_LEVEL
+        #define DEBUG_MIDI_LEVEL L_WARN
+    #endif
+    #define MIDI_DEBUG_LOG(level, ...) do { if (level >= DEBUG_MIDI_LEVEL) DEBUG_LOG(__VA_ARGS__); } while (0);
+    #define MIDI_DEBUG_DUMP(level, name, buffer, size) do { if (level >= DEBUG_MIDI_LEVEL) DEBUG_DUMP(name, buffer, size); } while (0);
+#else
+    #define MIDI_DEBUG_LOG
+    #define MIDI_DEBUG_DUMP
+#endif //DEBUG_MIDI
+
 #endif //CALYPSO_DEBUG_H

@@ -12,6 +12,9 @@
 #include "PS2Mouse.h"
 #include "mist/MistService.h"
 #include "USBService.h"
+#include "I2SAudioTarget.h"
+#include "MIDIStateMachine.h"
+#include "MIDIService.h"
 
 using namespace calypso;
 
@@ -48,6 +51,13 @@ Button userButton(Configuration::GPIO_USER_BUTTON);
 MistService mistService(Configuration::GPIO_MIST_USERIO, Configuration::GPIO_MIST_DATAIO,
     Configuration::GPIO_MIST_OSD, Configuration::GPIO_MIST_DMODE);
 
+
+I2SAudioTarget i2sAudioTarget(Configuration::MIDI_SAMPLE_FREQ, 
+    Configuration::GPIO_I2S_BASE, Configuration::GPIO_I2S_DATA, 0);
+    
+MIDIStateMachine midiStateMachine;
+
+MIDIService midiService(i2sAudioTarget, midiStateMachine);
 
 #if 0
 static void device_init() {
