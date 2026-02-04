@@ -15,6 +15,8 @@
 #include "I2SAudioTarget.h"
 #include "MIDIStateMachine.h"
 #include "MIDIService.h"
+#include "Util.h"
+#include "tzx/TzxService.h"
 
 using namespace calypso;
 
@@ -54,10 +56,12 @@ MistService mistService(Configuration::GPIO_MIST_USERIO, Configuration::GPIO_MIS
 
 I2SAudioTarget i2sAudioTarget(Configuration::MIDI_SAMPLE_FREQ, 
     Configuration::GPIO_I2S_BASE, Configuration::GPIO_I2S_DATA, 0);
-    
-MIDIStateMachine midiStateMachine;
 
+MIDIStateMachine midiStateMachine;
 MIDIService midiService(i2sAudioTarget, midiStateMachine);
+
+TzxService::transition_t tzxTransitionBuffer[TzxService::TZX_TRANSITION_BUFFER_SIZE];
+TzxService tzxService(tzxTransitionBuffer, Configuration::GPIO_TZX_OUTPUT);
 
 #if 0
 static void device_init() {
@@ -73,8 +77,9 @@ int main() {
 
     Service::registerService(&usbService);
     Service::registerService(&mistService);
-
+    Service::registerService(&tzxService);
     spi.init();
+    
     //Multicore initialization only works from cold reset
     //for some unknown reason
 #if 1

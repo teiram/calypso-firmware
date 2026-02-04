@@ -12,7 +12,7 @@ public:
         m_size(size),
         m_full(false) {};
     
-    const T* head() const {
+    T* head() const {
         if (m_rindex != m_windex || m_full) {
             return &m_buffer[m_rindex];
         }

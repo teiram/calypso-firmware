@@ -15,12 +15,14 @@ target_include_directories(${PROGRAM_NAME} PRIVATE core mist/usbhost)
 #  "-DLOG=3"
 #)
 
-target_link_libraries(${PROGRAM_NAME}
+
+target_link_libraries(${PROGRAM_NAME} PRIVATE
     pico_stdlib
     pico_stdio_uart
     hardware_pio
     hardware_spi
     pico_multicore
+    tzx
     mist
     core
     tinyusb_host
@@ -34,3 +36,4 @@ pico_add_extra_outputs(${PROGRAM_NAME})
 
 add_subdirectory(core)
 add_subdirectory(mist)
+add_subdirectory(tzx)

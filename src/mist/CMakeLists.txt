@@ -39,6 +39,7 @@ add_library(mist STATIC
 	${MIST_FW_PATH}/menu-8bit.c
 	${MIST_FW_PATH}/menu.c
 	${MIST_FW_PATH}/menu-minimig.c
+	${MIST_FW_PATH}/menu_info.c
 	${MIST_FW_PATH}/mist_cfg.c
 	${MIST_FW_PATH}/neocd.c
 	${MIST_FW_PATH}/osd.c
@@ -60,13 +61,16 @@ add_library(mist STATIC
 	${MIST_FW_PATH}/usb/joymapping.c
 	${MIST_FW_PATH}/usb/hidparser.c
 	ace_processor.c
+	tzx_processor.cxx
 	MistHIDUSBController.cxx
 	MistUSBKeyboardHandler.cxx
 	MistUSBMouseHandler.cxx
 	MistUSBJoystickHandler.cxx
     PS3USBHIDDriver.cxx
     MistUtil.cxx
-	MistService.cxx)
+	MistService.cxx
+	FileStreamAdaptor.cxx
+	)
 target_compile_options(mist PRIVATE
   "-DVDATE=\"${TODAY}\""
   "-DVFIRM=\"${FVERSION}\""
@@ -81,6 +85,7 @@ target_compile_options(mist PRIVATE
 target_include_directories(mist PRIVATE 
 	.
 	../core
+	../tzx
 	../../libs
 	../../libs/mist-firmware
 	../../libs/mist-firmware/arch
