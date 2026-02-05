@@ -26,6 +26,7 @@ namespace calypso {
         void write(const Transition &transition);
         void isrHandler();
     private:
+        static constexpr uint32_t ONE_SECOND = 1000000;
         ConcurrentCircularBuffer<Transition>& m_transitionBuffer;
         uint8_t m_gpio;
         bool m_enabled;

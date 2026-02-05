@@ -1,15 +1,15 @@
-add_library(tzx STATIC
+add_library(tape STATIC
     TapeService.cxx
     PulseRenderer.cxx
     TzxTapeParser.cxx
 )
 
-target_include_directories(tzx PRIVATE 
+target_include_directories(tape PRIVATE 
 	.
 	../core
 )
 
-target_link_libraries(tzx 
+target_link_libraries(tape 
 	pico_stdio_uart
 	pico_stdlib
 )

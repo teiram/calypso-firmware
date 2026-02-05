@@ -16,8 +16,8 @@
 #include "MIDIStateMachine.h"
 #include "MIDIService.h"
 #include "Util.h"
-#include "tzx/TapeService.h"
-#include "tzx/TzxTapeParser.h"
+#include "tape/TapeService.h"
+#include "tape/TzxTapeParser.h"
 
 using namespace calypso;
 

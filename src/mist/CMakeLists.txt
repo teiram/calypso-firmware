@@ -85,7 +85,7 @@ target_compile_options(mist PRIVATE
 target_include_directories(mist PRIVATE 
 	.
 	../core
-	../tzx
+	../tape
 	../../libs
 	../../libs/mist-firmware
 	../../libs/mist-firmware/arch

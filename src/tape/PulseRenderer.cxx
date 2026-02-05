@@ -48,7 +48,7 @@ void PulseRenderer::write(const Transition &transition) {
 
 void PulseRenderer::isrHandler() {
     if (m_isrEnabled) {
-        if (alarm_pool_add_alarm_in_us(alarm_pool_get_default(), m_nextIsrTime, isr_handler, this, false) < 0) {
+        if (alarm_pool_add_alarm_in_us(alarm_pool_get_default(), m_nextIsrTime == 0 ? ONE_SECOND : m_nextIsrTime, isr_handler, this, false) < 0) {
             TZX_DEBUG_LOG(L_ERROR, "Error setting alarm for next transition\n");
         }
     }
@@ -89,7 +89,7 @@ void PulseRenderer::isrHandler() {
         }
     } else if (!m_enabled) {
         if (m_visited++ == 0) {
-            m_nextIsrTime = 1000000;
+            m_nextIsrTime = ONE_SECOND;
             m_level = 0;
         } else {
             m_isrEnabled = false;
@@ -97,6 +97,6 @@ void PulseRenderer::isrHandler() {
     } else {
         // Buffer underrun
         TZX_DEBUG_LOG(L_WARN, "Buffer underrun\n");
-        m_nextIsrTime = 1000000;
+        m_nextIsrTime = ONE_SECOND;
     }
 }
