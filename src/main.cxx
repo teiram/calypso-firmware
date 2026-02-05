@@ -16,7 +16,8 @@
 #include "MIDIStateMachine.h"
 #include "MIDIService.h"
 #include "Util.h"
-#include "tzx/TzxService.h"
+#include "tzx/TapeService.h"
+#include "tzx/TzxTapeParser.h"
 
 using namespace calypso;
 
@@ -60,8 +61,11 @@ I2SAudioTarget i2sAudioTarget(Configuration::MIDI_SAMPLE_FREQ,
 MIDIStateMachine midiStateMachine;
 MIDIService midiService(i2sAudioTarget, midiStateMachine);
 
-TzxService::transition_t tzxTransitionBuffer[TzxService::TZX_TRANSITION_BUFFER_SIZE];
-TzxService tzxService(tzxTransitionBuffer, Configuration::GPIO_TZX_OUTPUT);
+PulseRenderer::Transition tapeTransitionBuffer[TapeService::TAPE_TRANSITION_BUFFER_SIZE];
+ConcurrentCircularBuffer transitionBuffer(tapeTransitionBuffer, TapeService::TAPE_TRANSITION_BUFFER_SIZE);
+PulseRenderer pulseRenderer(transitionBuffer, Configuration::GPIO_TZX_OUTPUT, false, false);
+TapeService tapeService(pulseRenderer);
+TzxTapeParser tzxTapeParser;
 
 #if 0
 static void device_init() {
@@ -77,7 +81,7 @@ int main() {
 
     Service::registerService(&usbService);
     Service::registerService(&mistService);
-    Service::registerService(&tzxService);
+    Service::registerService(&tapeService);
     spi.init();
     
     //Multicore initialization only works from cold reset

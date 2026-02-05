@@ -10,6 +10,13 @@
 #define L_WARN 3
 #define L_ERROR 4
 
+#define DEBUG
+#define DEBUG_TZX
+#define DEBUG_TZX_LEVEL L_DEBUG
+
+#define DEBUG_MIDI
+#define DEBUG_MIDI_LEVEL L_DEBUG
+
 #ifdef DEBUG
     #define DEBUG_LOG(...)  printf(__VA_ARGS__)
     #define DEBUG_DUMP(name, buffer, size) do { printf("%s: \n", name); calypso::Util::hexdump((uint8_t *)buffer, (uint16_t) size, 0);} while (0);
@@ -83,5 +90,16 @@
     #define MIDI_DEBUG_LOG
     #define MIDI_DEBUG_DUMP
 #endif //DEBUG_MIDI
+
+#ifdef DEBUG_TZX
+    #ifndef DEBUG_TZX_LEVEL
+        #define DEBUG_TZX_LEVEL L_WARN
+    #endif
+    #define TZX_DEBUG_LOG(level, ...) do { if (level >= DEBUG_TZX_LEVEL) DEBUG_LOG(__VA_ARGS__); } while (0);
+    #define TZX_DEBUG_DUMP(level, name, buffer, size) do { if (level >= DEBUG_TZX_LEVEL) DEBUG_DUMP(name, buffer, size); } while (0);
+#else
+    #define TZX_DEBUG_LOG
+    #define TZX_DEBUG_DUMP
+#endif //DEBUG_TZX
 
 #endif //CALYPSO_DEBUG_H

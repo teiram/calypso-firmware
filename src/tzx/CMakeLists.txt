@@ -1,5 +1,7 @@
 add_library(tzx STATIC
-	TzxService.cxx
+    TapeService.cxx
+    PulseRenderer.cxx
+    TzxTapeParser.cxx
 )
 
 target_include_directories(tzx PRIVATE 

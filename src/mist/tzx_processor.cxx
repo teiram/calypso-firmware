@@ -11,23 +11,31 @@ extern "C" {
 }
 #endif
 
-#include "TzxService.h"
+#include "TapeService.h"
+#include "TzxTapeParser.h"
 #include "FileStreamAdaptor.h"
 
 using namespace calypso;
 
-extern TzxService tzxService;
+extern TapeService tapeService;
+extern TzxTapeParser tzxTapeParser;
 
 FileStreamAdaptor adaptor;
 
+static TapeParser* getTapeParser(const char *extension) {
+    TZX_DEBUG_LOG(L_DEBUG, "getTapeParser %s\n", extension);
+    // TODO: Get the appropiate tape parser depending on the file extension
+    return &tzxTapeParser;
+}
+
 static char getmenupage(uint8_t idx, char action, menu_page_t *page) {
     if (action == MENU_PAGE_EXIT) {
-        tzxService.eject();
+        tapeService.eject();
         adaptor.detach();
         return 0;
     }
 
-    page->title = (char*)"TZX Player";
+    page->title = (char*)"Tape Player";
     page->flags = 0;
     page->timer = 50;
     page->stdexit = MENU_STD_EXIT;
@@ -40,27 +48,31 @@ static char getmenuitem(uint8_t idx, char action, menu_item_t* item) {
     switch (idx) {
         case 0:
             if (action == MENU_ACT_GET) {
-                item->item = (char*) (tzxService.playing() ? "PAUSE" : "PLAY");
+                item->item = (char*) (tapeService.playing() ? "PAUSE" : "PLAY");
                 item->active = 1;
             } else if (action == MENU_ACT_SEL) {
-                tzxService.play();
+                if (tapeService.playing()) {
+                    tapeService.stop();
+                } else {
+                    tapeService.play();
+                }
             }
             break;
         case 4:
             if (action == MENU_ACT_GET) {
-                item->item = (char*) tzxService.currentStatus();
+                item->item = (char*) tapeService.currentStatus();
                 item->active = 0;
             }
             break;
         case 5:
             if (action == MENU_ACT_GET) {
-                snprintf(msg, 32, "Start Block: %d", tzxService.startBlock());
+                snprintf(msg, 32, "Start Block: %d", tapeService.startBlock());
                 item->item = msg;
-                item->active = !tzxService.playing();
+                item->active = !tapeService.playing();
             } else if (action == MENU_ACT_RIGHT) {
-                tzxService.setStartBlock(tzxService.startBlock() + 1);
+                tapeService.setStartBlock(tapeService.startBlock() + 1);
             } else if (action == MENU_ACT_LEFT) {
-                tzxService.setStartBlock(tzxService.startBlock() - 1);
+                tapeService.setStartBlock(tapeService.startBlock() - 1);
             }
             break;
         default:
@@ -72,10 +84,10 @@ static char getmenuitem(uint8_t idx, char action, menu_item_t* item) {
 }
 
 static void handle_tzx(FIL *file, int index, const char *name, const char *ext) {
-    adaptor.attach(file);
-    tzxService.insert(&adaptor);
-
-    if (tzxService.tapeLoaded()) {
+    TapeParser* parser = getTapeParser(ext);
+    if (parser != nullptr) {
+        adaptor.attach(file);
+        tapeService.insert(&adaptor, parser);
         SetupMenu(&getmenupage, &getmenuitem, NULL);
     }
 }
