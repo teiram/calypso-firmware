@@ -11,10 +11,6 @@ add_library(core STATIC
 	USBService.cxx
 	Util.cxx
 	Button.cxx
-	AudioTarget.cxx
-	I2SAudioTarget.cxx
-	MIDIStateMachine.cxx
-	MIDIService.cxx
 )
 
 target_include_directories(core PRIVATE .)

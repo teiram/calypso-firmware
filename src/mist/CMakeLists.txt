@@ -86,6 +86,7 @@ target_include_directories(mist PRIVATE
 	.
 	../core
 	../tape
+	../midi
 	../../libs
 	../../libs/mist-firmware
 	../../libs/mist-firmware/arch

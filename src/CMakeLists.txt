@@ -23,6 +23,7 @@ target_link_libraries(${PROGRAM_NAME} PRIVATE
     hardware_spi
     pico_multicore
     tape
+    midi
     mist
     core
     tinyusb_host
@@ -36,4 +37,5 @@ pico_add_extra_outputs(${PROGRAM_NAME})
 
 add_subdirectory(core)
 add_subdirectory(mist)
+add_subdirectory(midi)
 add_subdirectory(tape)
