@@ -2,6 +2,7 @@ add_library(tape STATIC
     TapeService.cxx
     PulseRenderer.cxx
     TzxTapeParser.cxx
+	TapTapeParser.cxx
 )
 
 target_include_directories(tape PRIVATE 

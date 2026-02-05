@@ -13,6 +13,7 @@ namespace calypso {
         virtual bool seekSet(uint32_t pos) = 0;
         virtual uint32_t position() const = 0;
         virtual uint32_t size() const = 0;
+        virtual void close() = 0;
     };
 
 }

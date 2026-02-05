@@ -61,7 +61,7 @@ add_library(mist STATIC
 	${MIST_FW_PATH}/usb/joymapping.c
 	${MIST_FW_PATH}/usb/hidparser.c
 	ace_processor.c
-	tzx_processor.cxx
+	tap_processor.cxx
 	MistHIDUSBController.cxx
 	MistUSBKeyboardHandler.cxx
 	MistUSBMouseHandler.cxx

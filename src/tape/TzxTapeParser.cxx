@@ -16,13 +16,17 @@ TzxTapeParser::TzxTapeParser():
     m_streamSize(0) {    
 }
 
+const char *TzxTapeParser::type() {
+    return TYPE;
+}
+
 void TzxTapeParser::init() {
     memset(&m_context, 0, sizeof(tzx_context_t));
     m_numBlocks = m_startBlock = m_currentPosition = m_streamSize = 0;
 }
 
 bool TzxTapeParser::insert(Stream& stream) {
-    TZX_DEBUG_LOG(L_DEBUG, "TzxTapeParser::insert\n");
+    TAPE_DEBUG_LOG(L_DEBUG, "TzxTapeParser::insert\n");
     stream.seekSet(10);
     m_streamSize = stream.size();
     calculateRelevantOffsets(stream);
@@ -54,6 +58,13 @@ void TzxTapeParser::setStartBlock(uint8_t startBlock) {
 
 bool TzxTapeParser::playing() {
     return m_tzxState != TZX_STATE_ERROR && m_tzxState != TZX_STATE_IDLE;
+}
+
+void TzxTapeParser::rewind(Stream &stream) {
+    stream.seekSet(10);
+    m_currentPosition = stream.position();
+    m_context.current_block = 0;
+    m_tzxState == TZX_STATE_INITIALIZED;
 }
 
 uint8_t TzxTapeParser::log2(uint8_t value) {
@@ -110,12 +121,12 @@ void TzxTapeParser::calculateRelevantOffsets(Stream &stream) {
         while (!eof) {
             if (pass == PASS_FIND_OFFSETS && isBlockIncluded(current_block, relevant_blocks)) {
                 m_blockOffsets[index++] = {current_block, stream.position()};
-                TZX_DEBUG_LOG(L_INFO, "Stored offset for block: %d\n", current_block);
+                TAPE_DEBUG_LOG(L_INFO, "Stored offset for block: %d\n", current_block);
             }
             next_value = stream.read();
             if (next_value > -1) {
                 m_context.blockId = next_value & 0xff;
-                TZX_DEBUG_LOG(L_DEBUG, "Block Id: 0x%02x\n", m_context.blockId);       
+                TAPE_DEBUG_LOG(L_DEBUG, "Block Id: 0x%02x\n", m_context.blockId);       
                 switch (m_context.blockId) {
                 case TZX_PUREDATA_BLOCK: {
                     tzx_puredata_block_t *blockp = (tzx_puredata_block_t *) m_inputBuffer;
@@ -134,7 +145,7 @@ void TzxTapeParser::calculateRelevantOffsets(Stream &stream) {
                 case TZX_TURBO_SPEED_BLOCK: {
                     tzx_turbospeed_block_t *blockp =(tzx_turbospeed_block_t *) m_inputBuffer;
                     stream.read((void*) blockp, sizeof(tzx_turbospeed_block_t));
-                    TZX_DEBUG_DUMP(L_DEBUG, "turbo", blockp, sizeof(tzx_turbospeed_block_t));
+                    TAPE_DEBUG_DUMP(L_DEBUG, "turbo", blockp, sizeof(tzx_turbospeed_block_t));
                     block_size = blockp->data_length[0] + 
                         ((uint32_t) blockp->data_length[1] * 256) +
                         ((uint32_t) blockp->data_length[2] * 65536);
@@ -197,7 +208,7 @@ void TzxTapeParser::calculateRelevantOffsets(Stream &stream) {
                             stream.read(&next_value, 2);
                             if (!isBlockIncluded(current_block + next_value, relevant_blocks)) {
                                 relevant_blocks[index] = current_block + next_value;
-                                TZX_DEBUG_LOG(L_INFO, "Found sequence call jump destination: %d\n", relevant_blocks[index]);
+                                TAPE_DEBUG_LOG(L_INFO, "Found sequence call jump destination: %d\n", relevant_blocks[index]);
                                 index++;
                             }
                         } while (--block_size > 0);
@@ -210,7 +221,7 @@ void TzxTapeParser::calculateRelevantOffsets(Stream &stream) {
                         stream.read(&next_value, 2);
                         if (!isBlockIncluded(current_block + next_value, relevant_blocks)) {
                             relevant_blocks[index] = current_block + next_value;
-                            TZX_DEBUG_LOG(L_INFO, "Found block jump destination: %d\n", relevant_blocks[index]);
+                            TAPE_DEBUG_LOG(L_INFO, "Found block jump destination: %d\n", relevant_blocks[index]);
                             index++;
                         }
                         block_size = 0;
@@ -223,7 +234,7 @@ void TzxTapeParser::calculateRelevantOffsets(Stream &stream) {
                     block_size = 0;
                     break;
                 default:
-                    TZX_DEBUG_LOG(L_WARN, "Unsupported block type: %d\n", m_context.blockId);
+                    TAPE_DEBUG_LOG(L_WARN, "Unsupported block type: %d\n", m_context.blockId);
                     eof = true;
                 }
                 stream.seekCur(block_size);
@@ -231,7 +242,7 @@ void TzxTapeParser::calculateRelevantOffsets(Stream &stream) {
                     num_blocks = current_block;
                 }
                 if (current_block == 255) {
-                    TZX_DEBUG_LOG(L_WARN, "Unable to calculate offsets over the first 255 blocks\n");
+                    TAPE_DEBUG_LOG(L_WARN, "Unable to calculate offsets over the first 255 blocks\n");
                     eof = true;
                 }
                 current_block++;
@@ -252,7 +263,7 @@ inline uint32_t TzxTapeParser::getBlockOffset(uint8_t block) {
             return m_blockOffsets[i].offset;
         }
     }
-    TZX_DEBUG_LOG(L_WARN, "Unable to find offset for block: %d\n");
+    TAPE_DEBUG_LOG(L_WARN, "Unable to find offset for block: %d\n");
     m_tzxState = TZX_STATE_ERROR;
     return 0;
 }
@@ -276,7 +287,7 @@ bool TzxTapeParser::needsAttention() {
     return m_tzxState == TZX_STATE_FINDBLOCK || m_tzxState == TZX_STATE_READBLOCK || m_tzxState == TZX_STATE_INITIALIZED;
 }
 
-void inline TzxTapeParser::writePulseWithFlags(PulseRenderer &pulseRenderer, const PulseRenderer::Transition &transition) {
+inline void TzxTapeParser::writePulseWithFlags(PulseRenderer &pulseRenderer, const PulseRenderer::Transition &transition) {
     if (m_context.next_pulse_flags) {
         PulseRenderer::Transition flagged(transition);
         flagged.flags |= m_context.next_pulse_flags;
@@ -299,7 +310,7 @@ void TzxTapeParser::renderStep(PulseRenderer &pulseRenderer, Stream &stream) {
         if (next_value > -1) {
             m_context.blockId = next_value & 0xff;
             memset(&m_blockInfo, 0, sizeof(block_info_t));
-            TZX_DEBUG_LOG(L_DEBUG, "Block type: 0x%02x, position:%ld\n", m_context.blockId, stream.position());
+            TAPE_DEBUG_LOG(L_DEBUG, "Block type: 0x%02x, position:%ld\n", m_context.blockId, stream.position());
 
             m_context.last_offset = m_context.current_offset;
             m_context.current_offset = stream.position() - 1;
@@ -318,7 +329,7 @@ void TzxTapeParser::renderStep(PulseRenderer &pulseRenderer, Stream &stream) {
                         ((uint32_t) blockp->data_length[2] * 65536);
                     m_tzxState = TZX_STATE_READBLOCK;
                 } else {
-                    TZX_DEBUG_LOG(L_WARN, "Unable to read block header\n");
+                    TAPE_DEBUG_LOG(L_WARN, "Unable to read block header\n");
                     m_tzxState = TZX_STATE_ERROR;
                 }
                 break;
@@ -343,7 +354,7 @@ void TzxTapeParser::renderStep(PulseRenderer &pulseRenderer, Stream &stream) {
                         stream.seekCur(-1); //Compensate for block_type prefetch
                         m_tzxState = TZX_STATE_READBLOCK;
                     } else {
-                        TZX_DEBUG_LOG(L_INFO, "!EOF\n");
+                        TAPE_DEBUG_LOG(L_INFO, "!EOF\n");
                         m_tzxState = TZX_STATE_ERROR;
                     }
                 }
@@ -467,7 +478,7 @@ void TzxTapeParser::renderStep(PulseRenderer &pulseRenderer, Stream &stream) {
                     }
                     m_tzxState = TZX_STATE_FINDBLOCK;
                 } else {
-                    TZX_DEBUG_LOG(L_ERROR, "Unmatched loop end\n");
+                    TAPE_DEBUG_LOG(L_ERROR, "Unmatched loop end\n");
                     m_tzxState = TZX_STATE_ERROR;
                 }
                 break;
@@ -521,16 +532,16 @@ void TzxTapeParser::renderStep(PulseRenderer &pulseRenderer, Stream &stream) {
                 stream.read(&m_context.call_count, 2);
                 m_context.next_call_offset = stream.position();
                 m_context.call_start_block = m_context.current_block;
-                TZX_DEBUG_LOG(L_DEBUG, "Call count: %d, next call offset :%d\n", m_context.call_count, m_context.next_call_offset);
+                TAPE_DEBUG_LOG(L_DEBUG, "Call count: %d, next call offset :%d\n", m_context.call_count, m_context.next_call_offset);
                 m_context.call_count--;
             }
             JUMP_TO_BLOCK:
             case TZX_JUMP_TO_BLOCK: {
                 int16_t* offset = (int16_t*) m_inputBuffer;
                 if (stream.read((void*) offset, 2) > -1) {
-                    TZX_DEBUG_LOG(L_DEBUG, "Jumping to block got offset: %d, in block %d\n", *offset, m_context.current_block);
+                    TAPE_DEBUG_LOG(L_DEBUG, "Jumping to block got offset: %d, in block %d\n", *offset, m_context.current_block);
                     m_context.current_block = m_context.current_block + *offset;
-                    TZX_DEBUG_LOG(L_DEBUG, "Jumping to block: %d\n", m_context.current_block);
+                    TAPE_DEBUG_LOG(L_DEBUG, "Jumping to block: %d\n", m_context.current_block);
                     stream.seekSet(getBlockOffset(m_context.current_block));
                     m_tzxState = TZX_STATE_FINDBLOCK;
                 } else {
@@ -542,7 +553,7 @@ void TzxTapeParser::renderStep(PulseRenderer &pulseRenderer, Stream &stream) {
                 m_context.next_call_offset += 2;
                 if (m_context.call_count > 0) {
                     m_context.call_count--;
-                    TZX_DEBUG_LOG(L_DEBUG, "On return from sequence and next offset: %d\n", m_context.next_call_offset);
+                    TAPE_DEBUG_LOG(L_DEBUG, "On return from sequence and next offset: %d\n", m_context.next_call_offset);
                     goto JUMP_TO_BLOCK;
                 } else {
                     stream.seekSet(m_context.next_call_offset);
@@ -554,16 +565,16 @@ void TzxTapeParser::renderStep(PulseRenderer &pulseRenderer, Stream &stream) {
             }
             default: {
                 m_tzxState = TZX_STATE_ERROR;
-                TZX_DEBUG_LOG(L_WARN, "Unsupported block type: %d\n", m_context.blockId);
+                TAPE_DEBUG_LOG(L_WARN, "Unsupported block type: %d\n", m_context.blockId);
             }
         }
     } else {
-        TZX_DEBUG_LOG(L_INFO, "EOF\n");
+        TAPE_DEBUG_LOG(L_INFO, "EOF\n");
         m_tzxState = TZX_STATE_IDLE;
     }
     }
     if (m_tzxState == TZX_STATE_READBLOCK) {
-        TZX_DEBUG_LOG(L_DEBUG, "Block size: %d\n", m_blockInfo.size);
+        TAPE_DEBUG_LOG(L_DEBUG, "Block size: %d\n", m_blockInfo.size);
     }
     break;
 
@@ -595,14 +606,14 @@ void TzxTapeParser::renderStep(PulseRenderer &pulseRenderer, Stream &stream) {
                 case GDB_STATE_BEFORE_PILOT:   //Get the pilot symbol alphabet offset and 
                     m_blockInfo.ginfo.alphabet_offset = stream.position();
                     m_blockInfo.ginfo.symbol_size = 1 + 2 * m_blockInfo.ginfo.max_pulses_pilot_symbol;
-                    TZX_DEBUG_LOG(L_DEBUG, "Pilot alphabet in position %ld\n", stream.position());
+                    TAPE_DEBUG_LOG(L_DEBUG, "Pilot alphabet in position %ld\n", stream.position());
                     m_blockInfo.ginfo.alphabet_size = m_blockInfo.ginfo.pilot_symbol_count ? 
                         m_blockInfo.ginfo.pilot_symbol_count * m_blockInfo.ginfo.symbol_size :
                         256 * m_blockInfo.ginfo.symbol_size;
-                    TZX_DEBUG_LOG(L_DEBUG, "Alphabet size: %d\n", m_blockInfo.ginfo.alphabet_size);
+                    TAPE_DEBUG_LOG(L_DEBUG, "Alphabet size: %d\n", m_blockInfo.ginfo.alphabet_size);
                     if (m_blockInfo.ginfo.alphabet_size < TZX_SYMBOL_BUFFER_SIZE) {
                         //Cache the alphabet
-                        TZX_DEBUG_LOG(L_DEBUG, "Caching alphabet\n");
+                        TAPE_DEBUG_LOG(L_DEBUG, "Caching alphabet\n");
                         stream.read((void *) m_symbolBuffer, m_blockInfo.ginfo.alphabet_size);
                         m_blockInfo.ginfo.mode = GDB_MODE_CACHED_ALPHABET;
                     } else {
@@ -610,7 +621,7 @@ void TzxTapeParser::renderStep(PulseRenderer &pulseRenderer, Stream &stream) {
                         stream.seekCur(m_blockInfo.ginfo.alphabet_size);
                     }
                     m_blockInfo.ginfo.data_offset = stream.position();
-                    TZX_DEBUG_LOG(L_DEBUG, "Pilot data in position %ld\n", stream.position());
+                    TAPE_DEBUG_LOG(L_DEBUG, "Pilot data in position %ld\n", stream.position());
                     m_blockInfo.ginfo.state = GDB_STATE_PILOT_GRP;
                 case GDB_STATE_PILOT_GRP:
                     if (!m_blockInfo.ginfo.mode & GDB_MODE_CACHED_ALPHABET) {
@@ -661,23 +672,23 @@ void TzxTapeParser::renderStep(PulseRenderer &pulseRenderer, Stream &stream) {
                     break;
                 case GDB_STATE_BEFORE_DATA:
                     m_blockInfo.ginfo.alphabet_offset = stream.position();
-                    TZX_DEBUG_LOG(L_DEBUG, "Data alphabet offset: %ld\n", m_blockInfo.ginfo.alphabet_offset);
-                    TZX_DEBUG_LOG(L_DEBUG, "Number of symbols: %d\n", m_blockInfo.ginfo.data_symbol_count);
-                    TZX_DEBUG_LOG(L_DEBUG, "Max pulses per data symbol: %d\n", m_blockInfo.ginfo.max_pulses_data_symbol);
+                    TAPE_DEBUG_LOG(L_DEBUG, "Data alphabet offset: %ld\n", m_blockInfo.ginfo.alphabet_offset);
+                    TAPE_DEBUG_LOG(L_DEBUG, "Number of symbols: %d\n", m_blockInfo.ginfo.data_symbol_count);
+                    TAPE_DEBUG_LOG(L_DEBUG, "Max pulses per data symbol: %d\n", m_blockInfo.ginfo.max_pulses_data_symbol);
                     m_blockInfo.ginfo.symbol_size = 1 + 2 * m_blockInfo.ginfo.max_pulses_data_symbol;
-                    TZX_DEBUG_LOG(L_DEBUG, "Symbol size: %d\n", m_blockInfo.ginfo.symbol_size);
+                    TAPE_DEBUG_LOG(L_DEBUG, "Symbol size: %d\n", m_blockInfo.ginfo.symbol_size);
                     m_blockInfo.ginfo.alphabet_size = m_blockInfo.ginfo.data_symbol_count ? 
                         m_blockInfo.ginfo.data_symbol_count * m_blockInfo.ginfo.symbol_size :
                         256 * m_blockInfo.ginfo.symbol_size;
-                    TZX_DEBUG_LOG(L_DEBUG, "Alphabet size: %d\n", m_blockInfo.ginfo.alphabet_size);
+                    TAPE_DEBUG_LOG(L_DEBUG, "Alphabet size: %d\n", m_blockInfo.ginfo.alphabet_size);
                     if (m_blockInfo.ginfo.alphabet_size < TZX_SYMBOL_BUFFER_SIZE) {
-                        TZX_DEBUG_LOG(L_DEBUG, "Caching data alphabet with size: %d\n", m_blockInfo.ginfo.alphabet_size);
+                        TAPE_DEBUG_LOG(L_DEBUG, "Caching data alphabet with size: %d\n", m_blockInfo.ginfo.alphabet_size);
                         stream.read((void *) m_symbolBuffer, m_blockInfo.ginfo.alphabet_size);
                         m_blockInfo.ginfo.mode = GDB_MODE_CACHED_ALPHABET;
                         m_blockInfo.ginfo.u.data.data_buffer_offset = m_blockInfo.ginfo.alphabet_size;
                         m_blockInfo.ginfo.u.data.data_buffer_size = TZX_SYMBOL_BUFFER_SIZE - m_blockInfo.ginfo.alphabet_size;
-                        TZX_DEBUG_LOG(L_DEBUG, "Data offset in buffer: %d\n", m_blockInfo.ginfo.u.data.data_buffer_offset);
-                        TZX_DEBUG_LOG(L_DEBUG, "Room for stream data: %d\n", m_blockInfo.ginfo.u.data.data_buffer_size);
+                        TAPE_DEBUG_LOG(L_DEBUG, "Data offset in buffer: %d\n", m_blockInfo.ginfo.u.data.data_buffer_offset);
+                        TAPE_DEBUG_LOG(L_DEBUG, "Room for stream data: %d\n", m_blockInfo.ginfo.u.data.data_buffer_size);
                     } else {
                         stream.seekCur(m_blockInfo.ginfo.alphabet_size);
                         //Keep size in the buffer to cache the current symbol
@@ -686,7 +697,7 @@ void TzxTapeParser::renderStep(PulseRenderer &pulseRenderer, Stream &stream) {
                         m_blockInfo.ginfo.mode = 0;
                     }
                     m_blockInfo.ginfo.data_offset = stream.position();
-                    TZX_DEBUG_LOG(L_DEBUG, "Offset at data start: %ld\n", m_blockInfo.ginfo.data_offset);
+                    TAPE_DEBUG_LOG(L_DEBUG, "Offset at data start: %ld\n", m_blockInfo.ginfo.data_offset);
                     m_blockInfo.ginfo.u.data.bits_per_symbol = log2(m_blockInfo.ginfo.data_symbol_count);
                     //DEBUGMV(F("Bits per symbol: "), gdata_block_info.u.data.bits_per_symbol);
                     m_blockInfo.ginfo.state = GDB_STATE_DATA_NEXTBLOCK;
@@ -751,11 +762,11 @@ void TzxTapeParser::renderStep(PulseRenderer &pulseRenderer, Stream &stream) {
                     break;
                 case GDB_STATE_BEFORE_PAUSE:
                     if (m_blockInfo.end_pause > 0) {
-                        TZX_DEBUG_LOG(L_DEBUG, "Final pause: %d\n", m_blockInfo.end_pause);
+                        TAPE_DEBUG_LOG(L_DEBUG, "Final pause: %d\n", m_blockInfo.end_pause);
                         writePulseWithFlags(pulseRenderer, {m_blockInfo.end_pause, PulseRenderer::END_PAUSE});
                     }
-                    TZX_DEBUG_LOG(L_DEBUG, "Finished block data offset: %ld\n", m_blockInfo.ginfo.data_offset);
-                    TZX_DEBUG_LOG(L_DEBUG, "Seeking to: %ld\n", m_blockInfo.ginfo.end_offset);
+                    TAPE_DEBUG_LOG(L_DEBUG, "Finished block data offset: %ld\n", m_blockInfo.ginfo.data_offset);
+                    TAPE_DEBUG_LOG(L_DEBUG, "Seeking to: %ld\n", m_blockInfo.ginfo.end_offset);
                     stream.seekSet(m_blockInfo.ginfo.end_offset);
                     m_context.current_block++;
                     m_tzxState = TZX_STATE_FINDBLOCK;
@@ -787,14 +798,14 @@ void TzxTapeParser::renderStep(PulseRenderer &pulseRenderer, Stream &stream) {
                         m_blockInfo.sinfo.bits_last_byte : 8;
                         m_blockInfo.size--;
                     } else {
-                        TZX_DEBUG_LOG(L_ERROR, "Unexpected EOF\n");
+                        TAPE_DEBUG_LOG(L_ERROR, "Unexpected EOF\n");
                         m_tzxState = TZX_STATE_ERROR;
                         break;
                     }
                 } else {
                     //Handle final pause
                     if (m_blockInfo.end_pause > 0) {
-                        TZX_DEBUG_LOG(L_INFO, "Final pause: %d\n", m_blockInfo.end_pause);
+                        TAPE_DEBUG_LOG(L_INFO, "Final pause: %d\n", m_blockInfo.end_pause);
                         writePulseWithFlags(pulseRenderer, {m_blockInfo.end_pause, PulseRenderer::END_PAUSE});
                     }
                     m_context.current_block++;

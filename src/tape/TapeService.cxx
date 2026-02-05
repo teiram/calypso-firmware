@@ -11,10 +11,12 @@ TapeService::TapeService(PulseRenderer &pulseRenderer):
     m_pulseRenderer(pulseRenderer),
     m_stream(nullptr),
     m_tapeParser(nullptr),
-    m_play(false) {    
+    m_play(false),
+    m_attached(false) {    
 }
 
 bool TapeService::init() {
+    return true;
 }
 
 void TapeService::cleanup() {
@@ -45,11 +47,15 @@ uint8_t TapeService::numBlocks() {
 }
 
 bool TapeService::insert(Stream *stream, TapeParser *tapeParser) {
-    TZX_DEBUG_LOG(L_DEBUG, "TapeService::insert\n");
+    TAPE_DEBUG_LOG(L_DEBUG, "TapeService::insert\n");
+    m_attached = true;
     m_stream = stream;
     m_tapeParser = tapeParser;
-    m_pulseRenderer.enable();
     return m_tapeParser->insert(*stream);
+}
+
+void TapeService::detach() {
+    m_attached = false;
 }
 
 bool TapeService::playing() {
@@ -57,15 +63,25 @@ bool TapeService::playing() {
 }
 
 void TapeService::play() {
+    TAPE_DEBUG_LOG(L_DEBUG, "TapeService::play\n");
+    m_pulseRenderer.enable();
     m_play = true;
 }
 
+TapeParser* TapeService::tapeParser() {
+    return m_tapeParser;
+}
+
 void TapeService::stop() {
+    TAPE_DEBUG_LOG(L_DEBUG, "TapeService::play\n");
     m_play = false;
+    m_pulseRenderer.disable();
 }
 
 void TapeService::eject() {
-    TZX_DEBUG_LOG(L_DEBUG, "TapeService::eject\n");
+    TAPE_DEBUG_LOG(L_DEBUG, "TapeService::eject\n");
+    m_stream->close();
+    m_play = false;
     m_stream = nullptr;
     m_tapeParser = nullptr;
     m_pulseRenderer.disable();
@@ -77,4 +93,13 @@ bool TapeService::needsAttention() {
 
 void TapeService::attention() {
     m_tapeParser->renderStep(m_pulseRenderer, *m_stream);
+    if (!m_tapeParser->playing()) {
+        if (!m_attached) {
+            // If the OSD has been closed, we are detached, do the cleanup here
+            eject();
+        } else {
+            stop();
+            m_tapeParser->rewind(*m_stream);
+        }
+    }
 }

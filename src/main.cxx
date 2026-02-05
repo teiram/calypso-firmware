@@ -18,6 +18,7 @@
 #include "Util.h"
 #include "tape/TapeService.h"
 #include "tape/TzxTapeParser.h"
+#include "tape/TapTapeParser.h"
 
 using namespace calypso;
 
@@ -66,6 +67,7 @@ ConcurrentCircularBuffer transitionBuffer(tapeTransitionBuffer, TapeService::TAP
 PulseRenderer pulseRenderer(transitionBuffer, Configuration::GPIO_TZX_OUTPUT, false, false);
 TapeService tapeService(pulseRenderer);
 TzxTapeParser tzxTapeParser;
+TapTapeParser tapTapeParser;
 
 #if 0
 static void device_init() {

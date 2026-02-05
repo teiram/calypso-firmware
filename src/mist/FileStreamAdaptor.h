@@ -15,7 +15,6 @@ namespace calypso {
     public:
         FileStreamAdaptor();
         void attach(FIL *file);
-        void detach();
         int16_t read();
         uint32_t read(void *buffer, uint32_t size);
         bool available();
@@ -23,6 +22,7 @@ namespace calypso {
         bool seekCur(int32_t offset);
         bool seekSet(uint32_t pos);
         uint32_t position() const;
+        void close();
     };
 
 }

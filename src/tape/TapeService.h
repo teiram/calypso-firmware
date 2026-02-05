@@ -20,6 +20,7 @@ namespace calypso {
         Stream* m_stream;
         TapeParser* m_tapeParser;
         bool m_play;
+        bool m_attached;
     public:
         TapeService(PulseRenderer &pulseRenderer);
         const char* name();
@@ -29,11 +30,16 @@ namespace calypso {
         void attention();
 
         bool insert(Stream *stream, TapeParser *parser);
+        void detach();
+
         void play();
         void stop();
         void eject();
+
         bool playing();
-        const char *currentStatus();
+
+        const char* currentStatus();
+        TapeParser* tapeParser();
         uint8_t startBlock();
         void setStartBlock(uint8_t startBlock);
         uint8_t numBlocks();

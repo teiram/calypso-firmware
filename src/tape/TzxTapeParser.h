@@ -9,6 +9,7 @@ namespace calypso {
     public:
 
     private:
+        static constexpr const char* TYPE = {"TZX"};
         static constexpr uint8_t TZX_MAX_BLOCK_OFFSETS = 8;
         static constexpr uint8_t PASS_FIND_BLOCKS = 0;
         static constexpr uint8_t PASS_FIND_OFFSETS = 1;
@@ -28,7 +29,7 @@ namespace calypso {
         static constexpr uint8_t GDB_MODE_CACHED_ALPHABET = 1;
         static constexpr uint8_t SYMBOL_MASK[] = {0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff};
 
-
+    protected:
         typedef struct {
             uint16_t pilot_pulses;
             uint16_t zero_length;
@@ -134,7 +135,9 @@ namespace calypso {
         void init();
     public: 
         TzxTapeParser();
-        bool insert(Stream &stream);
+        virtual const char *type();
+        virtual bool insert(Stream &stream);
+        virtual void rewind(Stream &stream);
         bool needsAttention();
         void renderStep(PulseRenderer &pulseRenderer, Stream &stream);
         const char* currentStatus();
@@ -146,4 +149,4 @@ namespace calypso {
 
 }
 
-#endif //TZX_TAPE_PARSER_H
+#endif //TAP_TAPE_PARSER_H

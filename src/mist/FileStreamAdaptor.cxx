@@ -16,7 +16,7 @@ void FileStreamAdaptor::attach(FIL* file) {
     m_attached = true;
 }
 
-void FileStreamAdaptor::detach() {
+void FileStreamAdaptor::close() {
     if (m_attached) {
         f_close(&m_file);
     }

@@ -41,6 +41,7 @@ void PulseRenderer::write(const Transition &transition) {
     m_transitionBuffer.write(transition);
 
     if (m_transitionBuffer.full() && m_enabled && !m_isrEnabled) {
+        TAPE_DEBUG_LOG(L_DEBUG, "** Enabling Pulse ISR **\n");
         m_isrEnabled = true;
         isrHandler();
     }
@@ -49,7 +50,7 @@ void PulseRenderer::write(const Transition &transition) {
 void PulseRenderer::isrHandler() {
     if (m_isrEnabled) {
         if (alarm_pool_add_alarm_in_us(alarm_pool_get_default(), m_nextIsrTime == 0 ? ONE_SECOND : m_nextIsrTime, isr_handler, this, false) < 0) {
-            TZX_DEBUG_LOG(L_ERROR, "Error setting alarm for next transition\n");
+            TAPE_DEBUG_LOG(L_ERROR, "Error setting alarm for next transition\n");
         }
     }
     gpio_put(m_gpio, m_invertedOutput ^ m_level);
@@ -92,11 +93,12 @@ void PulseRenderer::isrHandler() {
             m_nextIsrTime = ONE_SECOND;
             m_level = 0;
         } else {
+            TAPE_DEBUG_LOG(L_DEBUG, "** Disabling Pulse ISR **\n");
             m_isrEnabled = false;
         }
     } else {
         // Buffer underrun
-        TZX_DEBUG_LOG(L_WARN, "Buffer underrun\n");
+        TAPE_DEBUG_LOG(L_WARN, "Buffer underrun\n");
         m_nextIsrTime = ONE_SECOND;
     }
 }
