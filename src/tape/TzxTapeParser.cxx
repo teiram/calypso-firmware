@@ -20,6 +20,10 @@ const char *TzxTapeParser::type() {
     return TYPE;
 }
 
+TapeConfiguration TzxTapeParser::configuration() {
+    return CONFIGURATION;
+}
+
 void TzxTapeParser::init() {
     memset(&m_context, 0, sizeof(tzx_context_t));
     m_numBlocks = m_startBlock = m_currentPosition = m_streamSize = 0;

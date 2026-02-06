@@ -1,4 +1,6 @@
 #include "TapeService.h"
+#include "hardware/gpio.h"
+
 #include "calypso-debug.h"
 
 using namespace calypso;
@@ -7,8 +9,10 @@ const char* TapeService::name() {
     return NAME;
 }
 
-TapeService::TapeService(PulseRenderer &pulseRenderer):
+TapeService::TapeService(PulseRenderer &pulseRenderer, uint8_t gpioMotor):
     m_pulseRenderer(pulseRenderer),
+    m_configuration(DEFAULT_CONFIGURATION),
+    m_gpioMotor(gpioMotor),
     m_stream(nullptr),
     m_tapeParser(nullptr),
     m_play(false),
@@ -16,6 +20,11 @@ TapeService::TapeService(PulseRenderer &pulseRenderer):
 }
 
 bool TapeService::init() {
+    if (m_configuration.senseMotor) {
+        gpio_init(m_gpioMotor);
+        gpio_set_dir(m_gpioMotor, false);
+        m_lastMotorValue = gpio_get(m_gpioMotor);
+    }
     return true;
 }
 
@@ -48,13 +57,20 @@ uint8_t TapeService::numBlocks() {
 
 bool TapeService::insert(Stream *stream, TapeParser *tapeParser) {
     TAPE_DEBUG_LOG(L_DEBUG, "TapeService::insert\n");
-    m_attached = true;
-    m_stream = stream;
-    m_tapeParser = tapeParser;
-    return m_tapeParser->insert(*stream);
+    if (tapeParser->insert(*stream)) {
+        m_attached = true;
+        m_stream = stream;
+        m_tapeParser = tapeParser;
+        m_configuration = tapeParser->configuration();
+        return true;
+    } else {
+        TAPE_DEBUG_LOG(L_WARN, "Unable to insert into TapeService\n");
+        return false;
+    }
 }
 
 void TapeService::detach() {
+    TAPE_DEBUG_LOG(L_DEBUG, "TapeService::detach\n");
     m_attached = false;
 }
 
@@ -88,7 +104,19 @@ void TapeService::eject() {
 }
 
 bool TapeService::needsAttention() {
-    return m_play && m_stream != nullptr && m_tapeParser != nullptr && m_tapeParser->needsAttention();
+    bool motorValue = false;
+    if (m_configuration.senseMotor) {
+        motorValue = gpio_get(m_gpioMotor);
+        if (motorValue != m_lastMotorValue) {
+            TAPE_DEBUG_LOG(L_DEBUG, "Motor value changed to %d\n", motorValue);
+        }
+        m_lastMotorValue = motorValue;
+    }
+    return m_play
+        && (!m_configuration.senseMotor || !motorValue)
+        && m_stream != nullptr
+        && m_tapeParser != nullptr 
+        && m_tapeParser->needsAttention();
 }
 
 void TapeService::attention() {
@@ -96,6 +124,7 @@ void TapeService::attention() {
     if (!m_tapeParser->playing()) {
         if (!m_attached) {
             // If the OSD has been closed, we are detached, do the cleanup here
+            TAPE_DEBUG_LOG(L_DEBUG, "Automatically ejecting on detached end of play\n");
             eject();
         } else {
             stop();

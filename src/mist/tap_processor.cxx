@@ -14,6 +14,7 @@ extern "C" {
 #include "TapeService.h"
 #include "TzxTapeParser.h"
 #include "TapTapeParser.h"
+#include "C64TapParser.h"
 #include "FileStreamAdaptor.h"
 #include <cstring>
 
@@ -22,6 +23,7 @@ using namespace calypso;
 extern TapeService tapeService;
 extern TzxTapeParser tzxTapeParser;
 extern TapTapeParser tapTapeParser;
+extern C64TapParser c64TapParser;
 
 FileStreamAdaptor adaptor;
 
@@ -30,7 +32,7 @@ static TapeParser* getTapeParser(const char *extension) {
     if (!strcasecmp(extension, "CDT") || !strcasecmp(extension, "TZX")) {
         return &tzxTapeParser;
     } else if (!strcasecmp(extension, "TAP")) {
-        return &tapTapeParser;
+        return &c64TapParser;
     } else {
         return nullptr;
     }

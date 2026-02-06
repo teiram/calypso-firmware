@@ -19,6 +19,7 @@
 #include "tape/TapeService.h"
 #include "tape/TzxTapeParser.h"
 #include "tape/TapTapeParser.h"
+#include "tape/C64TapParser.h"
 
 using namespace calypso;
 
@@ -64,10 +65,13 @@ MIDIService midiService(i2sAudioTarget, midiStateMachine);
 
 PulseRenderer::Transition tapeTransitionBuffer[TapeService::TAPE_TRANSITION_BUFFER_SIZE];
 ConcurrentCircularBuffer transitionBuffer(tapeTransitionBuffer, TapeService::TAPE_TRANSITION_BUFFER_SIZE);
-PulseRenderer pulseRenderer(transitionBuffer, Configuration::GPIO_TZX_OUTPUT, false, false);
-TapeService tapeService(pulseRenderer);
+PulseRenderer pulseRenderer(transitionBuffer, 
+    Configuration::GPIO_TAPE_OUTPUT,
+    false, false);
+TapeService tapeService(pulseRenderer, Configuration::GPIO_TAPE_MOTOR);
 TzxTapeParser tzxTapeParser;
 TapTapeParser tapTapeParser;
+C64TapParser c64TapParser;
 
 #if 0
 static void device_init() {

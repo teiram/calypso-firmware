@@ -10,6 +10,7 @@ namespace calypso {
 
     private:
         static constexpr const char* TYPE = {"TZX"};
+        static constexpr TapeConfiguration CONFIGURATION = {.initialLevel = true, .reverseLevel = false, .senseMotor = false};
         static constexpr uint8_t TZX_MAX_BLOCK_OFFSETS = 8;
         static constexpr uint8_t PASS_FIND_BLOCKS = 0;
         static constexpr uint8_t PASS_FIND_OFFSETS = 1;
@@ -145,6 +146,7 @@ namespace calypso {
         void setStartBlock(uint8_t startBlock);
         uint8_t numBlocks();
         bool playing();
+        TapeConfiguration configuration();
     };
 
 }

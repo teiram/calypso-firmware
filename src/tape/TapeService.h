@@ -5,6 +5,7 @@
 #include "Stream.h"
 #include "PulseRenderer.h"
 #include "TapeParser.h"
+#include "TapeConfiguration.h"
 #include "pico/sync.h"
 
 namespace calypso {
@@ -12,17 +13,20 @@ namespace calypso {
     class TapeService: public Service {
     public:
         static constexpr uint8_t TAPE_TRANSITION_BUFFER_SIZE = 64;
- 
+
     private:
+        constexpr static TapeConfiguration DEFAULT_CONFIGURATION = {.initialLevel = 0, .reverseLevel = false, .senseMotor = false};
         constexpr static const char NAME[] = {"TapeService"};
         PulseRenderer& m_pulseRenderer;
-
+        uint8_t m_gpioMotor;
+        bool m_lastMotorValue;
+        TapeConfiguration m_configuration;
         Stream* m_stream;
         TapeParser* m_tapeParser;
         bool m_play;
         bool m_attached;
     public:
-        TapeService(PulseRenderer &pulseRenderer);
+        TapeService(PulseRenderer &pulseRenderer, uint8_t gpioMotor);
         const char* name();
         bool init();
         void cleanup();
@@ -30,6 +34,7 @@ namespace calypso {
         void attention();
 
         bool insert(Stream *stream, TapeParser *parser);
+        void reconfigure(bool senseMotor, bool level, bool invertedOutput);
         void detach();
 
         void play();

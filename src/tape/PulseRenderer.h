@@ -16,7 +16,7 @@ namespace calypso {
         static constexpr uint8_t VALUE_FORCE_ZERO = 1 << 3;
         static constexpr uint8_t VALUE_FORCE_ONE = 1 << 4;
         typedef struct {
-            uint16_t value;
+            uint32_t value;
             uint8_t flags:3;
         } __attribute__((packed)) Transition;
         PulseRenderer(ConcurrentCircularBuffer<Transition>& transitionBuffer, uint8_t gpio, bool initialLevel, bool invertedOutput);

@@ -3,6 +3,7 @@ add_library(tape STATIC
     PulseRenderer.cxx
     TzxTapeParser.cxx
 	TapTapeParser.cxx
+	C64TapParser.cxx
 )
 
 target_include_directories(tape PRIVATE 
