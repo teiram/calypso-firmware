@@ -30,6 +30,7 @@
 #include "hardware/watchdog.h"
 #include "joystick.h"
 #include "ace_processor.h"
+#include "tap_processor.h"
 
 const char version[] = {"$VER:CLP-" VFIRM};
 static serial_sink_t midi_sink = {1, 8, 0, &midi_byte_processor, 0};
@@ -311,6 +312,7 @@ int mist_init() {
     data_io_init();
 
     ace_processor_register();
+    tap_processor_register();
 
     c64files_init();
 

@@ -37,6 +37,8 @@ public:
     static constexpr uint8_t GPIO_I2S_BASE = 14; //Takes GPIOs 14 and 15
     static constexpr uint32_t MIDI_SAMPLE_FREQ = 24000;
 
+    static constexpr uint8_t GPIO_TZX_OUTPUT = 15;
+
     static constexpr uint8_t GPIO_USER_BUTTON = 24;
 
     static constexpr uint8_t MASK_JOY_RIGHT = 0x01;

@@ -12,9 +12,13 @@
 #include "PS2Mouse.h"
 #include "mist/MistService.h"
 #include "USBService.h"
-#include "I2SAudioTarget.h"
-#include "MIDIStateMachine.h"
-#include "MIDIService.h"
+#include "midi/I2SAudioTarget.h"
+#include "midi/MIDIStateMachine.h"
+#include "midi/MIDIService.h"
+#include "Util.h"
+#include "tape/TapeService.h"
+#include "tape/TzxTapeParser.h"
+#include "tape/TapTapeParser.h"
 
 using namespace calypso;
 
@@ -54,10 +58,16 @@ MistService mistService(Configuration::GPIO_MIST_USERIO, Configuration::GPIO_MIS
 
 I2SAudioTarget i2sAudioTarget(Configuration::MIDI_SAMPLE_FREQ, 
     Configuration::GPIO_I2S_BASE, Configuration::GPIO_I2S_DATA, 0);
-    
-MIDIStateMachine midiStateMachine;
 
+MIDIStateMachine midiStateMachine;
 MIDIService midiService(i2sAudioTarget, midiStateMachine);
+
+PulseRenderer::Transition tapeTransitionBuffer[TapeService::TAPE_TRANSITION_BUFFER_SIZE];
+ConcurrentCircularBuffer transitionBuffer(tapeTransitionBuffer, TapeService::TAPE_TRANSITION_BUFFER_SIZE);
+PulseRenderer pulseRenderer(transitionBuffer, Configuration::GPIO_TZX_OUTPUT, false, false);
+TapeService tapeService(pulseRenderer);
+TzxTapeParser tzxTapeParser;
+TapTapeParser tapTapeParser;
 
 #if 0
 static void device_init() {
@@ -73,8 +83,9 @@ int main() {
 
     Service::registerService(&usbService);
     Service::registerService(&mistService);
-
+    Service::registerService(&tapeService);
     spi.init();
+    
     //Multicore initialization only works from cold reset
     //for some unknown reason
 #if 1
