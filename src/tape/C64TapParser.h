@@ -24,9 +24,6 @@ namespace calypso {
         const char* type();
         const char* currentStatus();
         bool playing();
-        uint8_t numBlocks();
-        uint8_t startBlock();
-        void setStartBlock(uint8_t startBlock);
         TapeConfiguration configuration();
     };
 }

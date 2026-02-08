@@ -142,6 +142,7 @@ namespace calypso {
         bool needsAttention();
         void renderStep(PulseRenderer &pulseRenderer, Stream &stream);
         const char* currentStatus();
+        bool hasBlockSupport();
         uint8_t startBlock();
         void setStartBlock(uint8_t startBlock);
         uint8_t numBlocks();

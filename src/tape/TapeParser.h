@@ -17,9 +17,10 @@ namespace calypso {
         virtual TapeConfiguration configuration() = 0;
         virtual const char* currentStatus() = 0;
         virtual bool playing() = 0;
-        virtual uint8_t numBlocks() = 0;
-        virtual uint8_t startBlock() = 0;
-        virtual void setStartBlock(uint8_t startBlock) = 0;
+        virtual bool hasBlockSupport() { return false; };
+        virtual uint8_t numBlocks() { return 1; };
+        virtual uint8_t startBlock() { return 0; };
+        virtual void setStartBlock(uint8_t startBlock) {};
     };
 }
 

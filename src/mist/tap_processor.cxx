@@ -7,6 +7,7 @@ extern "C" {
 #include "fat_compat.h"
 #include "data_io.h"
 #include "menu.h"
+#include "menu-8bit.h"
 #ifdef __cplusplus
 }
 #endif
@@ -40,7 +41,6 @@ static TapeParser* getTapeParser(const char *extension) {
 
 static char getmenupage(uint8_t idx, char action, menu_page_t *page) {
     if (action == MENU_PAGE_EXIT) {
-        tapeService.detach();
         return 0;
     }
 
@@ -58,8 +58,8 @@ static char getmenuitem(uint8_t idx, char action, menu_item_t* item) {
         case 0:
             if (action == MENU_ACT_GET) {
                 item->item = (char*) (tapeService.playing() ? "             STOP" : "             PLAY");
-                item->active = 1;
-                item->stipple = 0;
+                item->active = tapeService.inserted();
+                item->stipple = !tapeService.inserted();
             } else if (action == MENU_ACT_SEL) {
                 if (tapeService.playing()) {
                     tapeService.stop();
@@ -68,19 +68,30 @@ static char getmenuitem(uint8_t idx, char action, menu_item_t* item) {
                 }
             }
             break;
-        case 2:
+        case 1:
+            if (action == MENU_ACT_GET) {
+                item->item = (char *) "             CLOSE";
+                item->active = 1;
+                item->stipple = 0;
+            } else if (action == MENU_ACT_SEL) {
+                tapeService.eject();
+                clear_sticky_menu_handler();
+                CloseMenu();
+            }
+            break;
+        case 3:
             if (action == MENU_ACT_GET) {
                 snprintf(msg, 32, "Driver: %s", tapeService.tapeParser()->type());
                 item->item = msg;
                 item->active = 0;
-                item->stipple = 0;
+                item->stipple = !tapeService.inserted();
             }
             break;
         case 4:
             if (action == MENU_ACT_GET) {
-                item->item = (char*) tapeService.currentStatus();
+                item->item = (char*) (tapeService.inserted() ? tapeService.currentStatus() : "");
                 item->active = 0;
-                item->stipple = 0;
+                item->stipple = !tapeService.inserted();
             }
             break;
         case 5:
@@ -88,19 +99,20 @@ static char getmenuitem(uint8_t idx, char action, menu_item_t* item) {
                 snprintf(msg, 32, "Start Block: %d", tapeService.startBlock());
                 item->item = msg;
                 item->active = !tapeService.playing();
-                item->stipple = tapeService.playing();
+                item->stipple = tapeService.playing() || !tapeService.hasBlockSupport();
             } else if (action == MENU_ACT_RIGHT) {
                 tapeService.setStartBlock(tapeService.startBlock() + 1);
             } else if (action == MENU_ACT_LEFT) {
                 tapeService.setStartBlock(tapeService.startBlock() - 1);
             }
             break;
+
         default:
             item->item = nullptr;
             item->active = 0;
             break;
     }
-    return idx > 5 ? 0 : 1;
+    return idx > 6 ? 0 : 1;
 }
 
 static void handle_tap(FIL *file, int index, const char *name, const char *ext) {
@@ -109,6 +121,7 @@ static void handle_tap(FIL *file, int index, const char *name, const char *ext) 
         adaptor.attach(file);
         tapeService.insert(&adaptor, parser);
         SetupMenu(&getmenupage, &getmenuitem, NULL);
+        set_sticky_menu_handler({.page_handler = getmenupage, .items_handler = getmenuitem, .key_handler = NULL});
     } else {
         ErrorMessage("Unsupported tape format", 255);
     }

@@ -106,16 +106,3 @@ bool C64TapParser::playing() {
     return m_valid && !m_eof;
 }
 
-
-uint8_t C64TapParser::numBlocks() {
-    return 1;
-}
-        
-uint8_t C64TapParser::startBlock() {
-    return 0;
-}
-
-void C64TapParser::setStartBlock(uint8_t startBlock) {
-
-}
-

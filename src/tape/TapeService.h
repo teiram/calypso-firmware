@@ -24,7 +24,6 @@ namespace calypso {
         Stream* m_stream;
         TapeParser* m_tapeParser;
         bool m_play;
-        bool m_attached;
     public:
         TapeService(PulseRenderer &pulseRenderer, uint8_t gpioMotor);
         const char* name();
@@ -34,15 +33,14 @@ namespace calypso {
         void attention();
 
         bool insert(Stream *stream, TapeParser *parser);
+        bool inserted();
         void reconfigure(bool senseMotor, bool level, bool invertedOutput);
-        void detach();
 
         void play();
         void stop();
         void eject();
-
         bool playing();
-
+        bool hasBlockSupport();
         const char* currentStatus();
         TapeParser* tapeParser();
         uint8_t startBlock();

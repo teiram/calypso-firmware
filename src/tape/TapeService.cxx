@@ -15,8 +15,7 @@ TapeService::TapeService(PulseRenderer &pulseRenderer, uint8_t gpioMotor):
     m_gpioMotor(gpioMotor),
     m_stream(nullptr),
     m_tapeParser(nullptr),
-    m_play(false),
-    m_attached(false) {    
+    m_play(false) {    
 }
 
 bool TapeService::init() {
@@ -39,6 +38,10 @@ const char* TapeService::currentStatus() {
     }
 }
 
+bool TapeService::hasBlockSupport() {
+    return m_tapeParser != nullptr ? m_tapeParser->hasBlockSupport() : false;
+}
+
 uint8_t TapeService::startBlock() {
     return m_tapeParser != nullptr ? m_tapeParser->startBlock() : 0;
 }
@@ -58,7 +61,6 @@ uint8_t TapeService::numBlocks() {
 bool TapeService::insert(Stream *stream, TapeParser *tapeParser) {
     TAPE_DEBUG_LOG(L_DEBUG, "TapeService::insert\n");
     if (tapeParser->insert(*stream)) {
-        m_attached = true;
         m_stream = stream;
         m_tapeParser = tapeParser;
         m_configuration = tapeParser->configuration();
@@ -69,9 +71,8 @@ bool TapeService::insert(Stream *stream, TapeParser *tapeParser) {
     }
 }
 
-void TapeService::detach() {
-    TAPE_DEBUG_LOG(L_DEBUG, "TapeService::detach\n");
-    m_attached = false;
+bool TapeService::inserted() {
+    return m_stream != nullptr && m_tapeParser != nullptr;
 }
 
 bool TapeService::playing() {
@@ -96,8 +97,8 @@ void TapeService::stop() {
 
 void TapeService::eject() {
     TAPE_DEBUG_LOG(L_DEBUG, "TapeService::eject\n");
-    m_stream->close();
     m_play = false;
+    m_stream->close();
     m_stream = nullptr;
     m_tapeParser = nullptr;
     m_pulseRenderer.disable();
@@ -122,13 +123,7 @@ bool TapeService::needsAttention() {
 void TapeService::attention() {
     m_tapeParser->renderStep(m_pulseRenderer, *m_stream);
     if (!m_tapeParser->playing()) {
-        if (!m_attached) {
-            // If the OSD has been closed, we are detached, do the cleanup here
-            TAPE_DEBUG_LOG(L_DEBUG, "Automatically ejecting on detached end of play\n");
-            eject();
-        } else {
-            stop();
-            m_tapeParser->rewind(*m_stream);
-        }
+        stop();
+        m_tapeParser->rewind(*m_stream);
     }
 }

@@ -48,6 +48,10 @@ const char *TzxTapeParser::currentStatus() {
     return m_statusBuffer;
 }
 
+bool TzxTapeParser::hasBlockSupport() {
+    return true;
+}
+
 uint8_t TzxTapeParser::startBlock() {
     return m_startBlock;
 }
@@ -257,6 +261,7 @@ void TzxTapeParser::calculateRelevantOffsets(Stream &stream) {
     }
     stream.seekSet(saved_offset);
     m_numBlocks = num_blocks;
+    m_context.current_block = 0;
     m_tzxState = TZX_STATE_INITIALIZED;
 }
 

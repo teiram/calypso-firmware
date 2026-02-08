@@ -10,10 +10,6 @@
 #define L_WARN 3
 #define L_ERROR 4
 
-#define DEBUG
-#define DEBUG_TAPE
-#define DEBUG_TAPE_LEVEL L_DEBUG
-
 #ifdef DEBUG
     #define DEBUG_LOG(...)  printf(__VA_ARGS__)
     #define DEBUG_DUMP(name, buffer, size) do { printf("%s: \n", name); calypso::Util::hexdump((uint8_t *)buffer, (uint16_t) size, 0);} while (0);
