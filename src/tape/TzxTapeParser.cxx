@@ -69,10 +69,11 @@ bool TzxTapeParser::playing() {
 }
 
 void TzxTapeParser::rewind(Stream &stream) {
+    memset(&m_context, 0, sizeof(tzx_context_t));
     stream.seekSet(10);
     m_currentPosition = stream.position();
     m_context.current_block = 0;
-    m_tzxState == TZX_STATE_INITIALIZED;
+    m_tzxState = TZX_STATE_INITIALIZED;
 }
 
 uint8_t TzxTapeParser::log2(uint8_t value) {

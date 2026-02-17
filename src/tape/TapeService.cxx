@@ -89,8 +89,12 @@ TapeParser* TapeService::tapeParser() {
     return m_tapeParser;
 }
 
+const char *TapeService::tapeParserType() {
+    return m_tapeParser != nullptr ? m_tapeParser->type() : "";
+}
+
 void TapeService::stop() {
-    TAPE_DEBUG_LOG(L_DEBUG, "TapeService::play\n");
+    TAPE_DEBUG_LOG(L_DEBUG, "TapeService::stop\n");
     m_play = false;
     m_pulseRenderer.disable();
 }

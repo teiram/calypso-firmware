@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-uint8_t tap_processor_register();
+uint8_t tap_player_register();
 
 #ifdef __cplusplus
 }

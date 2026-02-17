@@ -312,7 +312,7 @@ int mist_init() {
     data_io_init();
 
     ace_processor_register();
-    tap_processor_register();
+    tap_player_register();
 
     c64files_init();
 

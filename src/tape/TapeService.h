@@ -44,6 +44,7 @@ namespace calypso {
         const char* currentStatus();
         TapeParser* tapeParser();
         uint8_t startBlock();
+        const char* tapeParserType();
         void setStartBlock(uint8_t startBlock);
         uint8_t numBlocks();
 
