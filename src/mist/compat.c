@@ -310,11 +310,13 @@ int mist_init() {
 
     printf("data_io_init()\n");
     data_io_init();
-
     ace_processor_register();
-    tap_player_register();
-
     c64files_init();
+    snes_init();
+    zx_init();
+
+    page_plugin_init();
+    tap_player_register();
 
     // tos config also contains cdc redirect settings used by minimig
     printf("tos_config_load()\n");
