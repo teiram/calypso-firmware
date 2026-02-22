@@ -20,6 +20,7 @@
 #include "tape/TzxTapeParser.h"
 #include "tape/TapTapeParser.h"
 #include "tape/C64TapParser.h"
+#include "tape/Apple1BinParser.h"
 
 using namespace calypso;
 
@@ -72,6 +73,7 @@ TapeService tapeService(pulseRenderer, Configuration::GPIO_TAPE_MOTOR);
 TzxTapeParser tzxTapeParser;
 TapTapeParser tapTapeParser;
 C64TapParser c64TapParser;
+Apple1BinParser apple1BinParser;
 
 #if 0
 static void device_init() {

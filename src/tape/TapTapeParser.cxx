@@ -19,7 +19,7 @@ bool TapTapeParser::insert(Stream& stream) {
     TAPE_DEBUG_LOG(L_DEBUG, "TzxTapeParser::insert\n");
     stream.seekSet(0);
     m_streamSize = stream.size();
-    m_tzxState == TZX_STATE_INITIALIZED;
+    m_tzxState = TZX_STATE_INITIALIZED;
     return true;
 }
 
@@ -27,7 +27,7 @@ void TapTapeParser::rewind(Stream &stream) {
     stream.seekSet(0);
     m_currentPosition = stream.position();
     m_context.current_block = 0;
-    m_tzxState == TZX_STATE_INITIALIZED;
+    m_tzxState = TZX_STATE_INITIALIZED;
 }
 
 void TapTapeParser::renderStep(PulseRenderer &pulseRenderer, Stream &stream) {

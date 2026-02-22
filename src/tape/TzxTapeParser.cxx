@@ -13,7 +13,8 @@ TzxTapeParser::TzxTapeParser():
     m_numBlocks(0),
     m_startBlock(0),
     m_currentPosition(0),
-    m_streamSize(0) {    
+    m_streamSize(0),
+    m_lsbFirst(false) {    
 }
 
 const char *TzxTapeParser::type() {
@@ -786,9 +787,15 @@ void TzxTapeParser::renderStep(PulseRenderer &pulseRenderer, Stream &stream) {
             }
 
             if (m_blockInfo.sinfo.pending_bits > 0) {
-                writePulseWithFlags(pulseRenderer, {(m_blockInfo.current_value & 0x80) ? 
-                    m_blockInfo.sinfo.one_length : m_blockInfo.sinfo.zero_length, PulseRenderer::VALUE_PULSE});
-                m_blockInfo.current_value <<= 1;
+                if (m_lsbFirst) {
+                    writePulseWithFlags(pulseRenderer, {(m_blockInfo.current_value & 1) ? 
+                        m_blockInfo.sinfo.one_length : m_blockInfo.sinfo.zero_length, PulseRenderer::VALUE_PULSE});
+                    m_blockInfo.current_value >>= 1;
+                } else {
+                    writePulseWithFlags(pulseRenderer, {(m_blockInfo.current_value & 0x80) ? 
+                        m_blockInfo.sinfo.one_length : m_blockInfo.sinfo.zero_length, PulseRenderer::VALUE_PULSE});
+                    m_blockInfo.current_value <<= 1;
+                }
                 m_blockInfo.sinfo.pending_bits--;
             } else {
                 if (m_blockInfo.sinfo.pilot_pulses > 0) {

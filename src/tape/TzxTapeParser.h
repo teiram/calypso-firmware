@@ -126,7 +126,7 @@ namespace calypso {
         uint8_t m_startBlock;
         uint32_t m_currentPosition;
         uint32_t m_streamSize;
-
+        bool m_lsbFirst;
         uint8_t log2(uint8_t value);
         inline static bool isBlockIncluded(uint8_t block, uint8_t relevant_blocks[]);
         void calculateRelevantOffsets(Stream &stream);
