@@ -32,6 +32,15 @@
 #include "ace_processor.h"
 #include "tap_processor.h"
 
+void serial_debugger_stop() {
+    printf("\n");
+}
+
+void serial_debugger_echo(uint8_t value) {
+    printf("%c[%02x] ", isprint(value) ? value : '?', value);
+}
+static serial_sink_t raw_console_sink = {2, 8, 0, &serial_debugger_echo, serial_debugger_stop};
+
 const char version[] = {"$VER:CLP-" VFIRM};
 static serial_sink_t midi_sink = {1, 8, 0, &midi_byte_processor, 0};
 
@@ -305,6 +314,8 @@ int mist_init() {
 
     serial_sink_init();
     serial_sink_register(&midi_sink);
+    serial_sink_register(&raw_console_sink);
+
     printf("user_io_init()\n");
     user_io_init();
 

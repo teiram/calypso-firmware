@@ -21,6 +21,7 @@
 #include "tape/TapTapeParser.h"
 #include "tape/C64TapParser.h"
 #include "tape/Apple1BinParser.h"
+#include "tape/MzfTapeParser.h"
 
 using namespace calypso;
 
@@ -74,6 +75,7 @@ TzxTapeParser tzxTapeParser;
 TapTapeParser tapTapeParser;
 C64TapParser c64TapParser;
 Apple1BinParser apple1BinParser;
+MzfTapeParser mzfTapeParser;
 
 #if 0
 static void device_init() {

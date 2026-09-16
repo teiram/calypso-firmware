@@ -17,6 +17,7 @@ extern "C" {
 #include "TapTapeParser.h"
 #include "C64TapParser.h"
 #include "Apple1BinParser.h"
+#include "MzfTapeParser.h"
 #include "FileStreamAdaptor.h"
 #include <cstring>
 
@@ -27,6 +28,7 @@ extern TzxTapeParser tzxTapeParser;
 extern TapTapeParser tapTapeParser;
 extern C64TapParser c64TapParser;
 extern Apple1BinParser apple1BinParser;
+extern MzfTapeParser mzfTapeParser;
 
 FileStreamAdaptor adaptor;
 TapeParser *parser;
@@ -42,6 +44,8 @@ static TapeParser* getTapeParser(const char *format, const char *machine) {
         return &c64TapParser;
     } else if (!strcasecmp(format, "BIN") && !strcasecmp(machine, "Apple-I")) {
         return &apple1BinParser;
+    } else if (!strcasecmp(format, "MZF") && !strcasecmp(machine, "mz700")) {
+        return &mzfTapeParser;
     } else {
         return nullptr;
     }
