@@ -26,7 +26,7 @@
 #include "mist-firmware/fpga.h"
 #include "mist-firmware/config.h"
 #include "mist-firmware/cdc_control.h"
-#include "mist-firmware/c64files.h"
+#include "mist-firmware/idx_files.h"
 #include "hardware/watchdog.h"
 #include "joystick.h"
 #include "ace_processor.h"
@@ -322,7 +322,7 @@ int mist_init() {
     printf("data_io_init()\n");
     data_io_init();
     ace_processor_register();
-    c64files_init();
+    idx_files_init();
     snes_init();
     zx_init();
 

@@ -23,7 +23,7 @@ add_library(mist STATIC
 	${MIST_FW_PATH}/arc_file.c
 	${MIST_FW_PATH}/archie.c
 	${MIST_FW_PATH}/boot.c
-	${MIST_FW_PATH}/c64files.c
+	${MIST_FW_PATH}/idx_files.c
 	${MIST_FW_PATH}/cdc_control.c
 	${MIST_FW_PATH}/config.c
 	${MIST_FW_PATH}/cue_parser.c
@@ -66,11 +66,11 @@ add_library(mist STATIC
 	MistUSBKeyboardHandler.cxx
 	MistUSBMouseHandler.cxx
 	MistUSBJoystickHandler.cxx
-    PS3USBHIDDriver.cxx
-    MistUtil.cxx
+	PS3USBHIDDriver.cxx
+	MistUtil.cxx
 	MistService.cxx
 	FileStreamAdaptor.cxx
-	)
+)
 target_compile_options(mist PRIVATE
   "-DVDATE=\"${TODAY}\""
   "-DVFIRM=\"${FVERSION}\""
