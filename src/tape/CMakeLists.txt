@@ -6,6 +6,7 @@ add_library(tape STATIC
     C64TapParser.cxx
     Apple1BinParser.cxx
     MzfTapeParser.cxx
+    WavTapeParser.cxx
 )
 
 target_include_directories(tape PRIVATE 
