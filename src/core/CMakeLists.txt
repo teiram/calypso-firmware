@@ -13,7 +13,7 @@ add_library(core STATIC
 	Button.cxx
 )
 
-target_include_directories(core PRIVATE .)
+target_include_directories(core PRIVATE . ../mist)
 pico_generate_pio_header(core ${CMAKE_CURRENT_LIST_DIR}/ps2.pio)
 
 target_compile_options(core PUBLIC

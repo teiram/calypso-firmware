@@ -1,6 +1,7 @@
 #include "USBService.h"
 #include "bsp/board.h"
 #include "tusb.h"
+#include "usbrtc.h"
 
 using namespace calypso;
 
@@ -20,6 +21,7 @@ bool USBService::needsAttention() {
 
 void USBService::attention() {
     tuh_task();
+    usbrtc_task();
 }
 
 void USBService::cleanup() {}
