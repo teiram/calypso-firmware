@@ -1,6 +1,7 @@
 #include <cstdio>
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
+#include "hardware/clocks.h"
 #include "Configuration.h"
 #include "SPIDevice.h"
 #include "JTAG.h"
@@ -93,6 +94,12 @@ static void device_init() {
 #endif
 
 int main() {
+    // The wavetable mixer needs the headroom: at the default 125 MHz a full
+    // 64-voice block cannot be rendered inside its 2.7 ms budget. This must come
+    // before stdio_init_all() and every other peripheral init, because clk_sys
+    // (and clk_peri) divide the UART, SPI and PIO rates.
+    set_sys_clock_khz(250000, false);
+
     stdio_init_all();
 
     Service::registerService(&usbService);
