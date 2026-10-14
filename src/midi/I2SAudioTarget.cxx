@@ -23,9 +23,15 @@ bool I2SAudioTarget::init(const uint16_t bufferCount, const uint16_t bufferSampl
         return false;
     }
 
-    const uint8_t channelCount = 2; //I2S is always stereo
-    const __unused bool ok = audio_i2s_connect_extra(m_audioBufferPool, false, channelCount,
-        bufferSampleCount * channelCount, NULL);
+    // The producer pool is already stereo, so this is a stereo-to-stereo copy.
+    // Match the consumer pool to the producer geometry: a note can only start on
+    // a delivered block, so a larger consumer buffer would quantise note onsets.
+    // Queue depth, not buffer size, is what keeps the DMA fed, and 8 x N frames
+    // is the same audio in flight as the 2 x 2N the historical ratio produced.
+    const uint16_t consumerBufferCount = 8;
+    const uint16_t consumerBufferSamples = bufferSampleCount;
+    const __unused bool ok = audio_i2s_connect_extra(m_audioBufferPool, false,
+        consumerBufferCount, consumerBufferSamples, NULL);
     if (!ok) {
         MIDI_DEBUG_LOG(L_ERROR, "Error connecting i2s to producer pool\n");
         return false;

@@ -3,20 +3,23 @@
 
 #include "Service.h"
 #include "AudioTarget.h"
-#include "MIDIStateMachine.h"
+#include "Player.h"
+#include "MidiStreamParser.h"
 
 namespace calypso {
+    // Bridges the incoming MIDI byte stream to a Player. The service owns the
+    // audio target's lifetime (init) and pulls one audio block per attention();
+    // the Player owns the synthesis itself. Which Player it drives is decided by
+    // the caller (main.cxx), so a different engine can be plugged in there.
     class MIDIService: public Service {
         private:
-        static constexpr uint32_t DEFAULT_SAMPLE_FREQ = 24000;
-        static constexpr uint8_t VOL_BITS = 8;
-
         AudioTarget& m_audioTarget;
-        MIDIStateMachine& m_midiStateMachine;
+        Player& m_player;
+        MidiStreamParser m_midiParser;
 
         public:
         constexpr static const char NAME[] = {"MIDIService"};
-        MIDIService(AudioTarget &audioTarget, MIDIStateMachine &midiStateMachine);
+        MIDIService(AudioTarget &audioTarget, Player &player);
         const char* name();
         bool init();
         void cleanup();
