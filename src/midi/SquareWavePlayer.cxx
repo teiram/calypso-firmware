@@ -80,6 +80,19 @@ void SquareWavePlayer::stopNote(uint8_t channel, uint8_t pitch) {
     addToOscStatus(pitch, -velocity);
 }
 
+// The idle watchdog and the FPGA reload hook call this: clear every held key. stateInit()
+// zeroes the per-channel note velocities, leaving programs, volumes and pan alone exactly as a
+// note-off would; the oscillator aggregate has to be zeroed with them, because that sum is what
+// the render loop actually plays -- clearing only the keys would leave the last note droning.
+void SquareWavePlayer::allNotesOff() {
+    stateInit();
+    for (size_t osc = 0; osc < NUM_OSC; osc++) {
+        m_oscStatuses[osc].velocity = 0;
+        // Otherwise a key held through a reload hands the next note a stale elongation.
+        m_oscStatuses[osc].elongation = 0;
+    }
+}
+
 void SquareWavePlayer::showStats() {
 }
 

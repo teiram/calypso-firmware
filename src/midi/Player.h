@@ -18,6 +18,12 @@ public:
     virtual bool init() = 0;
     virtual void playNote(uint8_t channel, uint8_t pitch, uint8_t velocity) = 0;
     virtual void stopNote(uint8_t channel, uint8_t pitch) = 0;
+    // Silence every sounding voice, as a MIDI note-off would but without needing
+    // a note-off for each key. The engine's own note table is authoritative, so
+    // this lives here rather than being tracked separately by the caller: it is
+    // what the idle watchdog and the FPGA reload hook call when a stream stops
+    // mid-note and the note-off that would have released a key never arrives.
+    virtual void allNotesOff() = 0;
     virtual void changeProgram(__attribute__((__unused__)) uint8_t channel,
         __attribute__((__unused__)) uint8_t program) {};
     virtual void setVolume(__attribute__((__unused__)) uint8_t channel,

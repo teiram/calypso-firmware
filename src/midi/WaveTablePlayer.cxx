@@ -554,6 +554,37 @@ void WaveTablePlayer::playNote(uint8_t channel, uint8_t pitch, uint8_t velocity)
     }
 }
 
+// Release the voice generator `index` is bound to, exactly as a note-off for its key would.
+// stopNote() and allNotesOff() both come through here, so a panic cannot drift from a real
+// note-off: every rule below (a sample voice keeps its own reader-driven release, a loop is
+// faded, an instrument releases from wherever its envelope actually got to) is stated once.
+void WaveTablePlayer::releaseBinding(uint8_t index) {
+    ToneGenerator &tg = m_generators[index];
+    if (tg.sampleVoice) {
+        // A sample voice carries its own amplitude, not an instrument
+        // AHDSR: a one-shot rings out to its end and a note-off only
+        // clears the key binding; a loop is faded and the reader retires
+        // it once the fade reaches silence.
+        if (tg.sampleLoops) {
+            tg.envelopeState = ENV_RELEASE;
+            tg.envelopeIncrement = -tg.envelopeMultiplier / (int32_t) ms2cnt(20);
+        }
+        m_generatorBindings[index].channel = NO_CHANNEL;
+        m_generatorBindings[index].pitch = NO_PITCH;
+        return;
+    }
+    // Release from wherever the envelope has actually got to. The old code restamped the
+    // sustain level here, which is harmless while a held note sits at exactly that level
+    // but would have made a decayed note jump louder the moment it was let go.
+    tg.envelopeState = ENV_RELEASE;
+    tg.envelopeCount = INT_MAX; // the release stage runs down to silence
+    tg.envelopeRate = decayRate(tg.envelopeRelease,
+                                DECAY_REFERENCE_FREQ4096); // a damper does not scale
+    tg.envelopeCarry = 0;
+    m_generatorBindings[index].channel = NO_CHANNEL;
+    m_generatorBindings[index].pitch = NO_PITCH;
+}
+
 void WaveTablePlayer::stopNote(uint8_t channel, uint8_t pitch) {
     if (pitch < MIN_NOTE || pitch > MAX_NOTE) {
         return;
@@ -572,30 +603,27 @@ void WaveTablePlayer::stopNote(uint8_t channel, uint8_t pitch) {
     // only the first of them left the second sustaining with nothing left to stop it.
     for (uint8_t i = 0; i < MAX_TGENS; i++) {
         if (m_generatorBindings[i].channel == channel && m_generatorBindings[i].pitch == pitch) {
-            ToneGenerator &tg = m_generators[i];
-            if (tg.sampleVoice) {
-                // A sample voice carries its own amplitude, not an instrument
-                // AHDSR: a one-shot rings out to its end and a note-off only
-                // clears the key binding; a loop is faded and the reader retires
-                // it once the fade reaches silence.
-                if (tg.sampleLoops) {
-                    tg.envelopeState = ENV_RELEASE;
-                    tg.envelopeIncrement = -tg.envelopeMultiplier / (int32_t) ms2cnt(20);
-                }
-                m_generatorBindings[i].channel = NO_CHANNEL;
-                m_generatorBindings[i].pitch = NO_PITCH;
-                continue;
-            }
-            // Release from wherever the envelope has actually got to. The old code restamped the
-            // sustain level here, which is harmless while a held note sits at exactly that level
-            // but would have made a decayed note jump louder the moment it was let go.
-            tg.envelopeState = ENV_RELEASE;
-            tg.envelopeCount = INT_MAX; // the release stage runs down to silence
-            tg.envelopeRate = decayRate(tg.envelopeRelease,
-                                        DECAY_REFERENCE_FREQ4096); // a damper does not scale
-            tg.envelopeCarry = 0;
-            m_generatorBindings[i].channel = NO_CHANNEL;
-            m_generatorBindings[i].pitch = NO_PITCH;
+            releaseBinding(i);
+        }
+    }
+}
+
+// The idle watchdog and the FPGA reload hook call this: silence every bound voice as if each of
+// its keys had been let go, so a stream that stopped mid-note cannot leave a note sounding
+// forever. m_offNotes is a note-off statistic and is deliberately not touched -- no note-off
+// was played here.
+void WaveTablePlayer::allNotesOff() {
+    for (uint8_t i = 0; i < MAX_TGENS; i++) {
+        const uint8_t channel = m_generatorBindings[i].channel;
+        if (channel == NO_CHANNEL) {
+            continue;
+        }
+        if (channel == PERCUSSION_CHANNEL) {
+            // A drum carries no AHDSR to release: fade it exactly as its note-off would, and
+            // keep the binding so that a following hit of the same key still steals this voice.
+            fadeOutVoice(channel, m_generatorBindings[i].pitch, ms2cnt(20));
+        } else {
+            releaseBinding(i);
         }
     }
 }

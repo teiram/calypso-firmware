@@ -278,6 +278,7 @@ private:
     bool m_reverbEnabled = true;
     inline int16_t allocateGenerator(bool percussion, uint8_t pitch);
     void fadeOutVoice(uint8_t channel, uint8_t pitch, uint32_t fadeSamples);
+    void releaseBinding(uint8_t index);
     static inline int16_t softClip(int32_t sample);
     static inline int32_t slewGain(int32_t current, int32_t target);
     static inline int32_t decayRate(int32_t t60Samples, uint32_t freq4096,
@@ -316,6 +317,7 @@ public:
     virtual bool init();
     virtual void playNote(uint8_t channel, uint8_t pitch, uint8_t velocity);
     virtual void stopNote(uint8_t channel, uint8_t pitch);
+    virtual void allNotesOff();
     virtual void changeProgram(uint8_t channel, uint8_t program);
     virtual void setVolume(uint8_t channel, uint8_t volume);
     virtual void setPan(uint8_t channel, uint8_t pan);

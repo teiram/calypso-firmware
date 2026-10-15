@@ -35,6 +35,7 @@ public:
     virtual bool init();
     virtual void playNote(uint8_t channel, uint8_t pitch, uint8_t velocity);
     virtual void stopNote(uint8_t channel, uint8_t pitch);
+    virtual void allNotesOff();
     virtual void synthTask();
     virtual void showStats();
     virtual uint16_t audioBufferCount() const;
