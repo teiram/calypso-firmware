@@ -11,7 +11,8 @@
 // players understand are forwarded:
 //   0x8n note off         0x9n note on (velocity 0 is a note off)
 //   0xBn control change   0xCn program change   0xEn pitch bend
-// Control change forwards CC7 (channel volume) and CC10 (pan); 0xAn polyphonic
+// Control change forwards CC7 (channel volume) and CC10 (pan), and CC120/CC123
+// (All Sound Off / All Notes Off) to Player::allNotesOff(); 0xAn polyphonic
 // aftertouch and 0xDn channel pressure are parsed and dropped.
 class MidiStreamParser {
 public:

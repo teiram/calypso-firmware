@@ -64,6 +64,11 @@ void MidiStreamParser::dispatch() {
                 m_player.setVolume(channel, value);
             } else if (controller == 10) {
                 m_player.setPan(channel, value);
+            } else if (controller == 120 || controller == 123) {
+                // All Sound Off / All Notes Off: channel mode messages a player sends when it
+                // stops, and the same panic the idle watchdog raises when no message comes at
+                // all. Both are treated as a blank-stops-everything, which is what they are.
+                m_player.allNotesOff();
             }
             break;
         }
