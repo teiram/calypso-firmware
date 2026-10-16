@@ -12,6 +12,8 @@ public:
                    const uint8_t pioSM);
     bool init(const uint16_t buffer_count = DEFAULT_BUFFER_COUNT,
         const uint16_t buffer_sample_count = DEFAULT_BUFFER_SAMPLE_COUNT);
+    virtual void park();
+    virtual void resume();
 private:
     struct audio_i2s_config m_targetAudioConfig = {
         .data_pin = 255,

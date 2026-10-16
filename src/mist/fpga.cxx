@@ -1,6 +1,7 @@
 #include "fpga.h"
 #include <stdio.h>
 #include "JTAG.h"
+#include "midireceiver.h"
 #include "pico/time.h"
 
 using namespace calypso;
@@ -30,6 +31,10 @@ unsigned char ConfigureFpga(const char *bitfile) {
         printf("FPGA bitstream file %s opened, file size = %ld\n", filename, size);
         uint8_t buffer[512];
         uint readBytes;
+        // The core that was feeding the MIDI link is about to disappear: let go of anything it
+        // left sounding and hand back the output pins, which the incoming core may want for
+        // itself. Only once the bitstream is in hand, so a failed open leaves audio untouched.
+        midi_stop();
         jtag.startProgram();
         while (size > 0) {
             if (f_read(&bfile, buffer, size > 512 ? 512 : size, &readBytes) != FR_OK) {

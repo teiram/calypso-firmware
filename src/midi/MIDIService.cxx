@@ -1,79 +1,80 @@
 #include "MIDIService.h"
-#include "calypso-debug.h"
-#include <cmath>
+#include "pico/time.h"
 
 using namespace calypso;
 
-MIDIService::MIDIService(AudioTarget &audioTarget, MIDIStateMachine &midiStateMachine):
+MIDIService::MIDIService(AudioTarget &audioTarget, Player &player):
     m_audioTarget(audioTarget),
-    m_midiStateMachine(midiStateMachine) {}
+    m_player(player),
+    m_midiParser(player) {}
 
 const char *MIDIService::name() {
     return NAME;
 }
 
-bool MIDIService::init() {
-    if (m_audioTarget.init(AudioTarget::DEFAULT_BUFFER_COUNT,
-        AudioTarget::DEFAULT_BUFFER_SAMPLE_COUNT)) {
-        return m_midiStateMachine.init(m_audioTarget.sampleFrequency());
-    } else {
-        return false;
-    }
+static uint32_t nowMs() {
+    return to_ms_since_boot(get_absolute_time());
 }
 
-bool MIDIService::needsAttention() {
+bool MIDIService::init() {
+    if (m_bringUp != BringUp::NOT_TRIED) {
+        return m_bringUp == BringUp::DONE;
+    }
+    // The pool geometry is the engine's: the wavetable mixer quantises a note
+    // start to a block, so it asks for short blocks (there is no sampler here;
+    // the point is the note-onset quantisation, not latency).
+    //
+    // Latch whatever the attempt produces: a failed bring-up is fatal for this boot rather than
+    // something to retry on the next byte, because the audio target's setup cannot be repeated.
+    const bool audioUp = m_audioTarget.init(m_player.audioBufferCount(),
+                                            m_player.audioBufferSamples());
+    const bool ok = audioUp && m_player.init();
+    m_bringUp = ok ? BringUp::DONE : BringUp::FAILED;
+    if (!ok) {
+        return false;
+    }
+    m_running = true;
     return true;
 }
 
+bool MIDIService::needsAttention() {
+    // Silent while parked: there is nothing to render and the output pins are someone else's.
+    return m_running;
+}
+
 void MIDIService::attention() {
-    struct audio_buffer *audioBuffer = m_audioTarget.takeAudioBuffer(false);
-    if (!audioBuffer) {
-        return;
+    // Checked before synthTask(), which returns at once when the pool has no free buffer: the
+    // watchdog must fire on time even when audio is not flowing for some other reason.
+    if (m_watchdog.expired(nowMs())) {
+        m_player.allNotesOff();
     }
-    const uint32_t audioBufferSampleCount = audioBuffer->max_sample_count;
-    if (!audioBufferSampleCount) {
-        return;
-    }
-    bool stereo = m_audioTarget.isStereo();
-    audioBuffer->sample_count = audioBufferSampleCount;
-    int16_t *out = (int16_t *) audioBuffer->buffer->bytes;
-    const uint16_t volMul = round(2.0 * (((long)1u) << VOL_BITS));
-    const size_t numOsc = MIDIStateMachine::NUM_OSC;
-    const uint32_t countInc = MIDIStateMachine::COUNT_INC;
-    MIDIStateMachine::OscStatus *oscStatuses = m_midiStateMachine.oscStatuses();
-    const uint32_t totalSampleCount = audioBuffer->max_sample_count * (stereo ? 2 : 1);
-    for (uint32_t sampleIndex = 0; sampleIndex < totalSampleCount;) {
-        int64_t sampleValue = 0;
-        for (size_t osc = 0; osc < numOsc; osc++) {
-            MIDIStateMachine::OscStatus *oscStatus = &oscStatuses[osc];
-            uint32_t elongation = oscStatus->elongation;
-            if (elongation) {
-                const uint32_t countWrap = oscStatus->countWrap;
-                uint32_t count = oscStatus->count;
-                count += countInc;
-                if (count >= countWrap) {
-                    count -= countWrap;
-                    elongation = -elongation;
-                    oscStatus->elongation = elongation;
-                }
-                oscStatus->count = count;
-                sampleValue += elongation;
-            }
-        }
-        const int16_t scaledSampleValue = (int16_t)((sampleValue * volMul) >> VOL_BITS);
-        if (stereo) {
-            out[sampleIndex++] = scaledSampleValue; // left channel
-            out[sampleIndex++] = scaledSampleValue; // right channel
-        } else {
-            out[sampleIndex++] = scaledSampleValue; // mono channel
-        }
-    }
-    m_audioTarget.giveAudioBuffer(audioBuffer);
+    m_player.synthTask();
 }
 
 void MIDIService::accept(uint8_t midiByte) {
-    m_midiStateMachine.addMidiByte(midiByte);
+    if (m_bringUp != BringUp::DONE && !init()) {
+        return;
+    }
+    if (!m_running) {
+        // First byte after a park: take the output pins and the audio path back.
+        m_audioTarget.resume();
+        m_running = true;
+    }
+    // Any byte counts as the stream being alive, realtime and partial messages included.
+    m_watchdog.activity(nowMs());
+    m_midiParser.accept(midiByte);
 }
 
-void MIDIService::cleanup() {}
+void MIDIService::stop() {
+    if (!m_running) {
+        return;
+    }
+    m_player.allNotesOff();
+    m_audioTarget.park();
+    m_running = false;
+    m_watchdog.disarm();
+}
 
+void MIDIService::cleanup() {
+    stop();
+}

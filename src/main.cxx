@@ -1,6 +1,7 @@
 #include <cstdio>
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
+#include "hardware/clocks.h"
 #include "Configuration.h"
 #include "SPIDevice.h"
 #include "JTAG.h"
@@ -13,7 +14,7 @@
 #include "mist/MistService.h"
 #include "USBService.h"
 #include "midi/I2SAudioTarget.h"
-#include "midi/MIDIStateMachine.h"
+#include "midi/WaveTablePlayer.h"
 #include "midi/MIDIService.h"
 #include "Util.h"
 #include "tape/TapeService.h"
@@ -63,8 +64,12 @@ MistService mistService(Configuration::GPIO_MIST_USERIO, Configuration::GPIO_MIS
 I2SAudioTarget i2sAudioTarget(Configuration::MIDI_SAMPLE_FREQ, 
     Configuration::GPIO_I2S_BASE, Configuration::GPIO_I2S_DATA, 0);
 
-MIDIStateMachine midiStateMachine;
-MIDIService midiService(i2sAudioTarget, midiStateMachine);
+// The synth engine. WaveTablePlayer is the default; SquareWavePlayer is kept
+// buildable as the alternative and is selected here if it is ever wanted. It is
+// static storage on purpose: the player owns tens of kilobytes of generator and
+// reverb state that cannot live on the small main stack.
+static WaveTablePlayer wavePlayer(i2sAudioTarget);
+MIDIService midiService(i2sAudioTarget, wavePlayer);
 
 PulseRenderer::Transition tapeTransitionBuffer[TapeService::TAPE_TRANSITION_BUFFER_SIZE];
 ConcurrentCircularBuffer transitionBuffer(tapeTransitionBuffer, TapeService::TAPE_TRANSITION_BUFFER_SIZE);
@@ -89,6 +94,12 @@ static void device_init() {
 #endif
 
 int main() {
+    // The wavetable mixer needs the headroom: at the default 125 MHz a full
+    // 64-voice block cannot be rendered inside its 2.7 ms budget. This must come
+    // before stdio_init_all() and every other peripheral init, because clk_sys
+    // (and clk_peri) divide the UART, SPI and PIO rates.
+    set_sys_clock_khz(250000, false);
+
     stdio_init_all();
 
     Service::registerService(&usbService);
