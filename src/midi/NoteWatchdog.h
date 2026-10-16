@@ -24,7 +24,7 @@ public:
     // asymmetric. A note held forever is the bug, so a long window costs almost nothing where a
     // short one risks cutting a legitimate rest. This is the one number to turn if a core is
     // ever seen to pause longer than this between messages.
-    static constexpr uint32_t DEFAULT_TIMEOUT_MS = 10000;
+    static constexpr uint32_t DEFAULT_TIMEOUT_MS = 1000;
 
     explicit NoteWatchdog(uint32_t timeoutMs = DEFAULT_TIMEOUT_MS):
         m_timeoutMs(timeoutMs) {}
