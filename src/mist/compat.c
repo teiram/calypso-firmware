@@ -1,3 +1,4 @@
+#include "usbrtc.h"
 #include "compat.h"
 #include <stdio.h>
 #include "pico/time.h"
@@ -130,21 +131,14 @@ void WaitTimer(unsigned long time) {
     }
 }
 
+// USB RTC (i2c-tiny-usb + DS3231/DS1307), see usbrtc.c
 char GetRTC(unsigned char *d) {
-    // implemented as d[0-7] -
-    //   [y-100] [m] [d] [H] [M] [S] [Day1-7]
-    d[0] = 23;
-    d[1] = 12;
-    d[2] = 12;
-    d[3] = 23;
-    d[4] = 58;
-    d[5] = 34;
-    d[6] = 4;
-    return 0;
+    // d[0-6]: [year-1900] [month] [day] [hour] [min] [sec] [weekday 1-7]
+    return usbrtc_get_time(d) ? 1 : 0;
 }
 
 char SetRTC(unsigned char *d) {
-    return 0;
+    return usbrtc_set_time(d) ? 1 : 0;
 }
 
 void InitRTTC() {}

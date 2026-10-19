@@ -20,6 +20,7 @@ add_library(mist STATIC
 	midireceiver.cxx
 	usbdev.c
 	compat.c
+	usbrtc.c
 	${MIST_FW_PATH}/arc_file.c
 	${MIST_FW_PATH}/archie.c
 	${MIST_FW_PATH}/boot.c
