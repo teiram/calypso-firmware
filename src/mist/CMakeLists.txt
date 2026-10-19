@@ -63,6 +63,7 @@ add_library(mist STATIC
 	${MIST_FW_PATH}/usb/hidparser.c
 	ace_processor.c
 	tap_processor.cxx
+	midi_processor.cxx
 	MistHIDUSBController.cxx
 	MistUSBKeyboardHandler.cxx
 	MistUSBMouseHandler.cxx

@@ -6,6 +6,7 @@
 
 #include "waveforms_flr3_128.c"
 #include "fx_samples.c"
+#include "calypso-debug.h"
 
 // Delays are defined in pulse counts per millisecond
 constexpr int32_t ms2cnt(int32_t ms) {

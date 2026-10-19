@@ -16,6 +16,7 @@
 #include "midi/I2SAudioTarget.h"
 #include "midi/WaveTablePlayer.h"
 #include "midi/MIDIService.h"
+#include "midi/MidiPlayerService.h"
 #include "Util.h"
 #include "tape/TapeService.h"
 #include "tape/TzxTapeParser.h"
@@ -70,6 +71,7 @@ I2SAudioTarget i2sAudioTarget(Configuration::MIDI_SAMPLE_FREQ,
 // reverb state that cannot live on the small main stack.
 static WaveTablePlayer wavePlayer(i2sAudioTarget);
 MIDIService midiService(i2sAudioTarget, wavePlayer);
+MidiPlayerService midiPlayerService(midiService);
 
 PulseRenderer::Transition tapeTransitionBuffer[TapeService::TAPE_TRANSITION_BUFFER_SIZE];
 ConcurrentCircularBuffer transitionBuffer(tapeTransitionBuffer, TapeService::TAPE_TRANSITION_BUFFER_SIZE);
@@ -105,6 +107,7 @@ int main() {
     Service::registerService(&usbService);
     Service::registerService(&mistService);
     Service::registerService(&tapeService);
+    Service::registerService(&midiPlayerService);
     spi.init();
     
     //Multicore initialization only works from cold reset

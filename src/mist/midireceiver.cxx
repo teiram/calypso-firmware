@@ -15,8 +15,7 @@ void midi_byte_processor(uint8_t value) {
     //Since this service needs pins shared with the PSRAM powerpack module
     
     if (!serviceStarted) {
-        midiService.init();
-        Service::registerService(&midiService);
+        midiService.start();
         serviceStarted = true;
     }
     

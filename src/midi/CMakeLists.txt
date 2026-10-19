@@ -1,7 +1,9 @@
 add_library(midi STATIC
 	AudioTarget.cxx
 	I2SAudioTarget.cxx
+	MidiFileParser.cxx
 	MidiStreamParser.cxx
+	MidiPlayerService.cxx
 	MIDIService.cxx
 	SquareWavePlayer.cxx
 	WaveTablePlayer.cxx

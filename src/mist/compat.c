@@ -32,6 +32,7 @@
 #include "joystick.h"
 #include "ace_processor.h"
 #include "tap_processor.h"
+#include "midi_processor.h"
 
 void serial_debugger_stop() {
     printf("\n");
@@ -322,6 +323,7 @@ int mist_init() {
 
     page_plugin_init();
     tap_player_register();
+    midi_player_register();
 
     // tos config also contains cdc redirect settings used by minimig
     printf("tos_config_load()\n");

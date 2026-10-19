@@ -37,9 +37,26 @@ bool MIDIService::init() {
     return true;
 }
 
+bool MIDIService::start() {
+    const bool ok = init();
+    // Register even on a failed bring-up, as the serial path always did: the
+    // service object then stays in the list and accepts a later byte.
+    if (!m_registered) {
+        Service::registerService(this);
+        m_registered = true;
+    }
+    return ok;
+}
+
 bool MIDIService::needsAttention() {
     // Silent while parked: there is nothing to render and the output pins are someone else's.
     return m_running;
+}
+
+void MIDIService::keepAlive() {
+    if (m_running) {
+        m_watchdog.activity(nowMs());
+    }
 }
 
 void MIDIService::attention() {

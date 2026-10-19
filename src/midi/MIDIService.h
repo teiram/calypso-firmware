@@ -31,6 +31,7 @@ namespace calypso {
         NoteWatchdog m_watchdog;
         BringUp m_bringUp = BringUp::NOT_TRIED;
         bool m_running = false;
+        bool m_registered = false;
 
         public:
         constexpr static const char NAME[] = {"MIDIService"};
@@ -41,6 +42,17 @@ namespace calypso {
         bool needsAttention();
         void attention();
         void accept(uint8_t midiByte);
+        // One-shot bring-up plus registration, for callers that produce MIDI
+        // without an FPGA byte ever arriving (the file player). Idempotent; safe
+        // to call before init(). Registration is deferred to here rather than
+        // boot because the boot init loop would run init() and claim the pins
+        // the tape also wants.
+        bool start();
+        // Camera-shutter style reset of the idle watchdog. A file player knows
+        // its stream is alive even while a long note sustains and no message is
+        // being sent, so it pings this so the watchdog cannot cut the note. A
+        // no-op while parked.
+        void keepAlive();
         // Let go of every sounding note and hand the audio pins back, for an FPGA core reload
         // that may want them for something else. Safe before init(). Accepting a byte brings
         // the audio back.
