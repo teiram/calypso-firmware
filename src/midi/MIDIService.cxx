@@ -1,5 +1,6 @@
 #include "MIDIService.h"
 #include "pico/time.h"
+#include "calypso-extern.h"
 
 using namespace calypso;
 
@@ -33,6 +34,7 @@ bool MIDIService::init() {
     if (!ok) {
         return false;
     }
+    audio_core1_enable(true);
     m_running = true;
     return true;
 }
@@ -75,6 +77,7 @@ void MIDIService::accept(uint8_t midiByte) {
     if (!m_running) {
         // First byte after a park: take the output pins and the audio path back.
         m_audioTarget.resume();
+        audio_core1_enable(true);
         m_running = true;
     }
     // Any byte counts as the stream being alive, realtime and partial messages included.
@@ -87,6 +90,7 @@ void MIDIService::stop() {
         return;
     }
     m_player.allNotesOff();
+    audio_core1_enable(false);
     m_audioTarget.park();
     m_running = false;
     m_watchdog.disarm();

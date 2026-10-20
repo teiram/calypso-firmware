@@ -33,6 +33,10 @@ target_link_libraries(${PROGRAM_NAME} PRIVATE
 pico_enable_stdio_usb(${PROGRAM_NAME} 0)
 pico_enable_stdio_uart(${PROGRAM_NAME} 1)
 
+target_compile_options(${PROGRAM_NAME} PRIVATE
+  "-DPICO_CORE1_STACK_SIZE=4096"
+)
+
 pico_add_extra_outputs(${PROGRAM_NAME})
 
 add_subdirectory(core)
