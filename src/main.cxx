@@ -1,8 +1,6 @@
 #include <cstdio>
-#include <atomic>
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
-#include "pico/platform.h"
 #include "hardware/clocks.h"
 #include "Configuration.h"
 #include "SPIDevice.h"
@@ -19,8 +17,6 @@
 #include "midi/WaveTablePlayer.h"
 #include "midi/MIDIService.h"
 #include "midi/MidiPlayerService.h"
-#include "midi/PlayerCommandQueue.h"
-#include "midi/RemotePlayer.h"
 #include "Util.h"
 #include "tape/TapeService.h"
 #include "tape/TzxTapeParser.h"
@@ -74,31 +70,8 @@ I2SAudioTarget i2sAudioTarget(Configuration::MIDI_SAMPLE_FREQ,
 // static storage on purpose: the player owns tens of kilobytes of generator and
 // reverb state that cannot live on the small main stack.
 static WaveTablePlayer wavePlayer(i2sAudioTarget);
-static PlayerCommandQueue midiCommandQueue;
-static RemotePlayer remotePlayer(wavePlayer, midiCommandQueue);
-MIDIService midiService(i2sAudioTarget, remotePlayer);
+MIDIService midiService(i2sAudioTarget, wavePlayer);
 MidiPlayerService midiPlayerService(midiService);
-
-// Core 1 audio rendering control
-std::atomic<bool> audioEnabledCore1{false};
-
-extern "C" void audio_core1_enable(bool enable) {
-    audioEnabledCore1.store(enable, std::memory_order_release);
-}
-
-static void audioCore1() {
-    while (true) {
-        if (!audioEnabledCore1.load(std::memory_order_acquire)) {
-            tight_loop_contents();
-            continue;
-        }
-        PlayerCommand cmd;
-        while (midiCommandQueue.pop(cmd)) {
-            applyCommand(wavePlayer, cmd);
-        }
-        wavePlayer.synthTask();
-    }
-}
 
 PulseRenderer::Transition tapeTransitionBuffer[TapeService::TAPE_TRANSITION_BUFFER_SIZE];
 ConcurrentCircularBuffer transitionBuffer(tapeTransitionBuffer, TapeService::TAPE_TRANSITION_BUFFER_SIZE);
@@ -113,6 +86,15 @@ Apple1BinParser apple1BinParser;
 MzfTapeParser mzfTapeParser;
 WavTapeParser wavTapeParser;
 
+#if 0
+static void device_init() {
+    printf("Initializing devices under core1\n");
+    keyboard.init();
+    mouse.init();
+    printf("Devices initialized\n");
+}
+#endif
+
 int main() {
     // The wavetable mixer needs the headroom: at the default 125 MHz a full
     // 64-voice block cannot be rendered inside its 2.7 ms budget. This must come
@@ -122,20 +104,23 @@ int main() {
 
     stdio_init_all();
 
-    // Launch audio core early
-    sleep_ms(10);
-    multicore_launch_core1(&audioCore1);
-
     Service::registerService(&usbService);
     Service::registerService(&mistService);
     Service::registerService(&tapeService);
     Service::registerService(&midiPlayerService);
     spi.init();
     
+    //Multicore initialization only works from cold reset
+    //for some unknown reason
+#if 1
     userButton.init();
     keyboard.init();
     mouse.init();
-    
+#else
+    multicore_reset_core1();
+    sleep_ms(100);
+    multicore_launch_core1(&device_init);
+#endif
     printf("Initializing services...\n");
     for (int i = 0; i < Service::serviceCount; i++) {
         Service *s = Service::services[i];
@@ -144,7 +129,6 @@ int main() {
             printf("Error initializing service %s", s->name());
         }
     }
-    
     printf(" ...initialization done\n");
     printf("Calypso Firmware main loop starting\n");
     while (true) {
@@ -156,4 +140,3 @@ int main() {
         }
     }
 }
-

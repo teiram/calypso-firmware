@@ -8,7 +8,6 @@ add_library(midi STATIC
 	SquareWavePlayer.cxx
 	WaveTablePlayer.cxx
 	FixedReverb.cxx
-	RemotePlayer.cxx
 )
 
 # The mixer is a fixed point loop that runs tens of thousands of times a second;
