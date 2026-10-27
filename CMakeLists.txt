@@ -9,7 +9,7 @@ set(CMAKE_BUILD_TYPE RELEASE)
 
 #set(LOG 3)
 
-set(FVERSION "0.21")
+set(FVERSION "0.22")
 
 include(pico_sdk_import.cmake)
 include(pico_extras_import.cmake)
