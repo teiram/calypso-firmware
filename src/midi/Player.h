@@ -24,6 +24,18 @@ public:
     // what the idle watchdog and the FPGA reload hook call when a stream stops
     // mid-note and the note-off that would have released a key never arrives.
     virtual void allNotesOff() = 0;
+    // Immediate silence: every voice stops where it stands instead of releasing
+    // through its envelope. A transport stop (the file player's STOP, parking
+    // the shared audio pins) wants this rather than a musical release, so
+    // nothing of what was playing leaks into whatever is started next. The
+    // default is allNotesOff(), for engines that do not distinguish the two.
+    virtual void allSoundOff() { allNotesOff(); }
+    // Return the per-channel performance state to the GM power-up defaults
+    // (program 0, volume 100, pan centre, bend centred at +/-2 semitones).
+    // Songs neither begin nor end with a full reset, so without this one song's
+    // leftover bend, sensitivity, volume or patch would leak into the next.
+    // Voices are not touched; a transport stop silences them separately.
+    virtual void resetChannelState() {};
     virtual void changeProgram(__attribute__((__unused__)) uint8_t channel,
         __attribute__((__unused__)) uint8_t program) {};
     virtual void setVolume(__attribute__((__unused__)) uint8_t channel,
@@ -32,6 +44,12 @@ public:
         __attribute__((__unused__)) uint8_t pan) {};
     virtual void setPitchBending(__attribute__((__unused__)) uint8_t channel,
         __attribute__((__unused__)) uint16_t bending) {};
+    // RPN 0, the pitch bend sensitivity: how many semitones (plus cents) a full
+    // sweep bends. The GM default is +/-2; songs routinely set 7, 12 or more,
+    // and an engine that does not track it plays every bend at the wrong depth.
+    virtual void setPitchBendRange(__attribute__((__unused__)) uint8_t channel,
+        __attribute__((__unused__)) uint8_t semitones,
+        __attribute__((__unused__)) uint8_t cents) {};
     virtual void synthTask() = 0;
 
     virtual void showStats() = 0;

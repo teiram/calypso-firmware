@@ -1,6 +1,19 @@
 #include "MidiStreamParser.h"
 
-MidiStreamParser::MidiStreamParser(Player &player): m_player(player) {}
+MidiStreamParser::MidiStreamParser(Player &player): m_player(player) {
+    resetChannelState();
+}
+
+void MidiStreamParser::resetChannelState() {
+    reset();
+    for (uint8_t i = 0; i < 16; i++) {
+        m_rpnMsb[i] = RPN_NONE;
+        m_rpnLsb[i] = RPN_NONE;
+        m_nrpnSelected[i] = false;
+        m_dataEntryMsb[i] = 2; // the GM default bend sensitivity is +/-2 semitones
+        m_dataEntryLsb[i] = 0;
+    }
+}
 
 void MidiStreamParser::reset() {
     m_status = STATUS_NONE;
@@ -64,10 +77,37 @@ void MidiStreamParser::dispatch() {
                 m_player.setVolume(channel, value);
             } else if (controller == 10) {
                 m_player.setPan(channel, value);
-            } else if (controller == 120 || controller == 123) {
-                // All Sound Off / All Notes Off: channel mode messages a player sends when it
-                // stops, and the same panic the idle watchdog raises when no message comes at
-                // all. Both are treated as a blank-stops-everything, which is what they are.
+            } else if (controller == 101) {
+                // RPN select MSB; (127, 127) is the null RPN and deselects.
+                m_rpnMsb[channel] = value;
+                m_nrpnSelected[channel] = false;
+            } else if (controller == 100) {
+                m_rpnLsb[channel] = value;
+                m_nrpnSelected[channel] = false;
+            } else if (controller == 99 || controller == 98) {
+                // NRPN select: data entry now targets the NRPN, not the RPN.
+                m_nrpnSelected[channel] = true;
+            } else if (controller == 6 || controller == 38) {
+                // Data entry for the selected RPN. Only RPN 0x0000 (pitch bend
+                // sensitivity) is understood; the two halves can arrive in either
+                // order, so both are kept and the range is reissued on a change.
+                if (!m_nrpnSelected[channel] &&
+                    m_rpnMsb[channel] == 0 && m_rpnLsb[channel] == 0) {
+                    if (controller == 6) {
+                        m_dataEntryMsb[channel] = value;
+                    } else {
+                        m_dataEntryLsb[channel] = value;
+                    }
+                    m_player.setPitchBendRange(channel,
+                        m_dataEntryMsb[channel], m_dataEntryLsb[channel]);
+                }
+            } else if (controller == 120) {
+                // All Sound Off: immediate silence, no release phase.
+                m_player.allSoundOff();
+            } else if (controller == 123) {
+                // All Notes Off: each key is let go, as a note-off per key would.
+                // This is also the panic the idle watchdog raises when no message
+                // comes at all.
                 m_player.allNotesOff();
             }
             break;

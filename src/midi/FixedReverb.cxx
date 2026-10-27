@@ -4,9 +4,13 @@ FixedReverb::FixedReverb(int32_t dampingFract15, int32_t wetFract16):
     m_damping(dampingFract15),
     m_feedback(fract15(0.84)),
     m_allpassGain(fract15(0.5)),
-    m_wet(wetFract16),
-    m_lastOutL(0),
-    m_lastOutR(0) {
+    m_wet(wetFract16) {
+    reset();
+}
+
+void FixedReverb::reset() {
+    m_lastOutL = 0;
+    m_lastOutR = 0;
     for (uint16_t i = 0; i < 8; i++) {
         m_combs[i].index = 0;
         m_combs[i].filterStore = 0;

@@ -33,6 +33,12 @@ bool MIDIService::init() {
     if (!ok) {
         return false;
     }
+    // Worst case queued audio at stop() time: a full producer pool, plus the
+    // consumer pool I2SAudioTarget adds on top of it. Twice the producer
+    // duration covers both with margin, so the drain deadline always outlasts
+    // anything the DMA could still be holding.
+    m_parkDrainMs = 2u * m_player.audioBufferCount() * m_player.audioBufferSamples() *
+                    1000u / m_audioTarget.sampleFrequency() + 10u;
     m_running = true;
     return true;
 }
@@ -45,6 +51,7 @@ bool MIDIService::start() {
         Service::registerService(this);
         m_registered = true;
     }
+    m_parking = false; // a new playback cancels a pending park
     return ok;
 }
 
@@ -60,9 +67,18 @@ void MIDIService::keepAlive() {
 }
 
 void MIDIService::attention() {
+    const uint32_t now = nowMs();
+    // A pending park finishes the stop: by now the queue has drained its stale
+    // audio and the silenced synth has refilled it with silence.
+    if (m_parking && (int32_t) (now - m_parkAtMs) >= 0) {
+        m_audioTarget.park();
+        m_running = false;
+        m_parking = false;
+        return;
+    }
     // Checked before synthTask(), which returns at once when the pool has no free buffer: the
     // watchdog must fire on time even when audio is not flowing for some other reason.
-    if (m_watchdog.expired(nowMs())) {
+    if (m_watchdog.expired(now)) {
         m_player.allNotesOff();
     }
     m_player.synthTask();
@@ -72,6 +88,7 @@ void MIDIService::accept(uint8_t midiByte) {
     if (m_bringUp != BringUp::DONE && !init()) {
         return;
     }
+    m_parking = false; // a live stream cancels a pending park
     if (!m_running) {
         // First byte after a park: take the output pins and the audio path back.
         m_audioTarget.resume();
@@ -86,10 +103,19 @@ void MIDIService::stop() {
     if (!m_running) {
         return;
     }
-    m_player.allNotesOff();
-    m_audioTarget.park();
-    m_running = false;
+    // Hard silence, not a release: anything still fading out belongs to what was
+    // playing, and must not be heard over whatever is started next.
+    m_player.allSoundOff();
+    // The park is deferred (see m_parking): the audio already rendered by now
+    // drains out of the queue while the silenced synth refills it with silence.
+    m_parking = true;
+    m_parkAtMs = nowMs() + m_parkDrainMs;
     m_watchdog.disarm();
+}
+
+void MIDIService::resetChannels() {
+    m_midiParser.resetChannelState();
+    m_player.resetChannelState();
 }
 
 void MIDIService::cleanup() {

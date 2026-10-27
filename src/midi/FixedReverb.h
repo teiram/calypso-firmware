@@ -27,6 +27,11 @@ public:
     // comb feedback loop can never run away.
     void process(int32_t dryIn, int32_t &wetOutL, int32_t &wetOutR);
 
+    // Empty every delay line. The tail is previous audio by definition, so a
+    // transport stop clears it: otherwise the next thing played starts inside
+    // whatever was still ringing.
+    void reset();
+
 private:
     static constexpr int32_t fract15(double v) { return (int32_t) (v * 32768.0); }
     static constexpr int32_t fract16(double v) { return (int32_t) (v * 65536.0); }

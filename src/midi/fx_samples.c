@@ -5,7 +5,7 @@
 
 #include <inttypes.h>
 
-// GM 113 agogo: 6672 frames (278 ms), root 78 (one-shot)
+// GM 113 agogo: 6672 frames (278 ms), root 90 (one-shot)
 const int16_t fx_sample_113_agogo[] = {
     2, -1, -1, -1, -3, -2, -3, -2, -3, -6, -6, -5, -9, -8, -9, -10, -9, -7,
     -9, -11, -11, -10, -15, -15, -15, -19, -15, -16, -18, -18, -19, -21, -21, -20, -21, -22,
@@ -380,7 +380,7 @@ const int16_t fx_sample_113_agogo[] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
-// GM 115 woodblock: 5976 frames (249 ms), root 60 (one-shot)
+// GM 115 woodblock: 5976 frames (249 ms), root 76 (one-shot)
 const int16_t fx_sample_115_woodblock[] = {
     1, 0, -1, -5, 51, 64, 1, -62, -46, -26, -21, 15, -57, -36, 68, 155, -62, -273,
     -891, 14014, 15625, -359, -15140, -10507, -3526, -4062, -3881, -3482, 1829, -5478, -13849, -7393, 13550, 23092, 7208, -10706,
@@ -17907,9 +17907,9 @@ const voice_sample_t INSTRUMENT_VOICES[128] = {
     {0, 0, 0, 0, 0, false},  // GM 110: cycle
     {0, 0, 0, 0, 0, false},  // GM 111: cycle
     {0, 0, 0, 0, 0, false},  // GM 112: cycle
-    {fx_sample_113_agogo, 6672, 0, 6671, 78, false},  // GM 113
+    {fx_sample_113_agogo, 6672, 0, 6671, 90, false},  // GM 113
     {0, 0, 0, 0, 0, false},  // GM 114: cycle
-    {fx_sample_115_woodblock, 5976, 0, 5975, 60, false},  // GM 115
+    {fx_sample_115_woodblock, 5976, 0, 5975, 76, false},  // GM 115
     {0, 0, 0, 0, 0, false},  // GM 116: cycle
     {0, 0, 0, 0, 0, false},  // GM 117: cycle
     {0, 0, 0, 0, 0, false},  // GM 118: cycle

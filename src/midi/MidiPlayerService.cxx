@@ -38,7 +38,7 @@ void MidiPlayerService::attention() {
         // End of file: silence, release the shared audio pins, and leave the
         // file rewound for the next play.
         stop();
-        m_parser->rewind(*m_stream);
+        rewind();
     }
 }
 
@@ -50,6 +50,8 @@ bool MidiPlayerService::insert(Stream *stream, MidiFileParser *parser) {
     }
     m_stream = stream;
     m_parser = parser;
+    // A new song starts from the GM power-up state, not the last song's bends.
+    m_midiService.resetChannels();
     return true;
 }
 
@@ -93,6 +95,8 @@ void MidiPlayerService::eject() {
 void MidiPlayerService::rewind() {
     if (m_parser != nullptr && m_stream != nullptr) {
         m_parser->rewind(*m_stream);
+        // A restart from the top starts from the GM power-up state too.
+        m_midiService.resetChannels();
     }
 }
 

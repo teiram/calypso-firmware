@@ -210,13 +210,7 @@ bool WaveTablePlayer::init() {
         m_generatorBindings[i].channel = NO_CHANNEL;
         m_generatorBindings[i].pitch = NO_PITCH;
     }
-    for (uint8_t i = 0; i < MIDI_CHANNELS; i++) {
-        m_channelPatches[i] = 0;
-        m_channelVolumes[i] = 100;
-        m_channelVolumesFract[i] = PlayerUtil::fract16(100.0 / 127.0);
-        m_channelPitchBendings[i] = 0x10000;
-        m_channelPanIndex[i] = PAN_STEPS / 2;
-    }
+    resetChannelState();
 
     for (uint8_t i = 0; i < 128; i++) {
         double factor = exp2((double) (2.0 * i) / (12.0 * 128));
@@ -629,6 +623,19 @@ void WaveTablePlayer::allNotesOff() {
     }
 }
 
+// A transport stop, not a musical release: every voice is retired where it stands, including
+// ringing one-shots (a released sample voice has already cleared its binding, so the playing
+// test -- not the binding -- is the one that finds it). The reverb's tail is previous audio by
+// definition and goes with the voices, so the next song does not start inside it.
+void WaveTablePlayer::allSoundOff() {
+    for (uint8_t i = 0; i < MAX_TGENS; i++) {
+        if (m_generators[i].playing) {
+            retireVoice(i);
+        }
+    }
+    m_reverb.reset();
+}
+
 void WaveTablePlayer::changeProgram(uint8_t channel, uint8_t program) {
     if (channel < MIDI_CHANNELS) {
         m_channelPatches[channel] = program;
@@ -649,16 +656,47 @@ void WaveTablePlayer::setPan(uint8_t channel, uint8_t pan) {
     }
 }
 
+void WaveTablePlayer::resetChannelState() {
+    for (uint8_t i = 0; i < MIDI_CHANNELS; i++) {
+        m_channelPatches[i] = 0;
+        m_channelVolumes[i] = 100;
+        m_channelVolumesFract[i] = PlayerUtil::fract16(100.0 / 127.0);
+        m_channelPitchBendings[i] = 0x10000;
+        m_channelBendRaw[i] = 0x2000;
+        m_channelBendRangeCents[i] = 200; // GM default: +/-2 semitones
+        m_channelPanIndex[i] = PAN_STEPS / 2;
+    }
+}
+
+void WaveTablePlayer::updateBendFactor(uint8_t channel) {
+    // factor = 2^(semitones/12), where semitones spans the channel's RPN 0 bend
+    // sensitivity over the 14-bit sweep (GM default: +/-2 semitones).
+    const double bend = ((int32_t) m_channelBendRaw[channel] - 0x2000) / 8192.0;
+    const double semitones = bend * (m_channelBendRangeCents[channel] / 100.0);
+    double factor = exp2(semitones / 12.0);
+    // The factor rides the tone increment through fract32Mul, whose result must
+    // stay inside int32 at the highest note: clamp the sweep at four octaves
+    // either way, far past anything a phrase bends by.
+    if (factor > 16.0) {
+        factor = 16.0;
+    } else if (factor < 1.0 / 16.0) {
+        factor = 1.0 / 16.0;
+    }
+    m_channelPitchBendings[channel] = PlayerUtil::fract16(factor);
+}
+
 void WaveTablePlayer::setPitchBending(uint8_t channel, uint16_t bending) {
     if (channel < MIDI_CHANNELS) {
-        // MIDI pitch bend: 14-bit value, center at 0x2000 (8192)
-        // Range: 0 = -2 semitones, 0x2000 = 0, 0x3FFF = +2 semitones
-        // Calculate semitones: (bending - 8192) / 8192 * 2.0 = semitones
-        int16_t bendSemitones = (int16_t)bending - 8192;
-        
-        // Convert to factor: factor = 2^(semitones/12)
-        double factor = exp2((double)bendSemitones * 2.0 / (12.0 * 8192.0));
-        m_channelPitchBendings[channel] = PlayerUtil::fract16(factor);
+        // MIDI pitch bend: a 14-bit value, centre at 0x2000 (8192).
+        m_channelBendRaw[channel] = bending & 0x3fff;
+        updateBendFactor(channel);
+    }
+}
+
+void WaveTablePlayer::setPitchBendRange(uint8_t channel, uint8_t semitones, uint8_t cents) {
+    if (channel < MIDI_CHANNELS) {
+        m_channelBendRangeCents[channel] = semitones * 100 + cents;
+        updateBendFactor(channel);
     }
 }
 

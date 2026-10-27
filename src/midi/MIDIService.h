@@ -32,6 +32,16 @@ namespace calypso {
         BringUp m_bringUp = BringUp::NOT_TRIED;
         bool m_running = false;
         bool m_registered = false;
+        // A stop parks the audio one queue-drain period later, not at once:
+        // audio_i2s_set_enabled(false) does not flush the pool, so the audio
+        // already rendered at stop time (~100 ms, a full queue) would sit
+        // frozen and replay over the next thing that resumed the pins. During
+        // the window the silenced synth refills the queue with silence while
+        // the DMA drains the stale buffers, and the next start resumes onto
+        // silence. Any byte or start() cancels the pending park.
+        bool m_parking = false;
+        uint32_t m_parkAtMs = 0;
+        uint32_t m_parkDrainMs = 0;
 
         public:
         constexpr static const char NAME[] = {"MIDIService"};
@@ -53,10 +63,17 @@ namespace calypso {
         // being sent, so it pings this so the watchdog cannot cut the note. A
         // no-op while parked.
         void keepAlive();
-        // Let go of every sounding note and hand the audio pins back, for an FPGA core reload
-        // that may want them for something else. Safe before init(). Accepting a byte brings
-        // the audio back.
+        // Silence everything and hand the audio pins back, for an FPGA core reload
+        // that may want them for something else. The park itself is deferred by one
+        // queue-drain period (see m_parking). Safe before init(). Accepting a byte
+        // cancels the drain and brings the audio back.
         void stop();
+        // Fresh-song reset of the channel state on both sides of the bridge: the
+        // player's program/volume/pan/bend and the stream parser's RPN selection.
+        // The file player calls this when a song is inserted or rewound, so a song
+        // always starts from the GM power-up defaults rather than the previous
+        // song's leftovers. Not a pause/resume path: play() never resets.
+        void resetChannels();
     };
 }
 

@@ -264,6 +264,8 @@ private:
     uint8_t m_channelVolumes[MIDI_CHANNELS];
     int32_t m_channelVolumesFract[MIDI_CHANNELS];
     int32_t m_channelPitchBendings[MIDI_CHANNELS];
+    uint16_t m_channelBendRaw[MIDI_CHANNELS];        // last 14-bit bend value, centred 0x2000
+    uint16_t m_channelBendRangeCents[MIDI_CHANNELS]; // RPN 0 sensitivity, 100ths of a semitone
     int32_t m_channelPanIndex[MIDI_CHANNELS];
     int32_t m_panLutL[PAN_STEPS + 1];
     int32_t m_panLutR[PAN_STEPS + 1];
@@ -279,6 +281,7 @@ private:
     inline int16_t allocateGenerator(bool percussion, uint8_t pitch);
     void fadeOutVoice(uint8_t channel, uint8_t pitch, uint32_t fadeSamples);
     void releaseBinding(uint8_t index);
+    void updateBendFactor(uint8_t channel);
     static inline int16_t softClip(int32_t sample);
     static inline int32_t slewGain(int32_t current, int32_t target);
     static inline int32_t decayRate(int32_t t60Samples, uint32_t freq4096,
@@ -318,10 +321,13 @@ public:
     virtual void playNote(uint8_t channel, uint8_t pitch, uint8_t velocity);
     virtual void stopNote(uint8_t channel, uint8_t pitch);
     virtual void allNotesOff();
+    virtual void allSoundOff();
+    virtual void resetChannelState();
     virtual void changeProgram(uint8_t channel, uint8_t program);
     virtual void setVolume(uint8_t channel, uint8_t volume);
     virtual void setPan(uint8_t channel, uint8_t pan);
     virtual void setPitchBending(uint8_t channel, uint16_t bending);
+    virtual void setPitchBendRange(uint8_t channel, uint8_t semitones, uint8_t cents);
     virtual void synthTask();
     virtual void showStats();
     virtual uint16_t audioBufferCount() const;
