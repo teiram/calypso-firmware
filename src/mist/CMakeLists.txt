@@ -64,6 +64,7 @@ add_library(mist STATIC
 	ace_processor.c
 	tap_processor.cxx
 	midi_processor.cxx
+	FirmwareUpdate.cxx
 	MistHIDUSBController.cxx
 	MistUSBKeyboardHandler.cxx
 	MistUSBMouseHandler.cxx
@@ -99,7 +100,16 @@ target_link_libraries(mist
 	pico_stdlib
 	hardware_spi
 	hardware_pio
+	hardware_flash
+	hardware_dma
 	tinyusb_board
 	tinyusb_host
 	pico_audio
 )
+
+# When enabled, the /FIRMWARE.UPG update path validates and stages the image
+# but skips the final flash programming (safe to try on real hardware).
+option(UPDATE_DRY_RUN "Update from SD: validate and stage only, do not flash" OFF)
+if (UPDATE_DRY_RUN)
+	target_compile_definitions(mist PRIVATE FIRMWARE_UPDATE_DRY_RUN=1)
+endif()

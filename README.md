@@ -35,3 +35,54 @@ The official Mist firmware is included as a submodule, it's the official unmodif
 ```
     build/src/calypso-firmware.uf2
 ```
+
+# Updating the firmware from the SD card
+
+The firmware can update itself from a file on the SD card, the same way the
+original mist-firmware does it on the MiST: the update is triggered from the
+on-screen menu (`Update FIRMWARE`), no USB or SWD host is needed.
+
+## Preparing the update file
+
+The build tags `build/src/calypso-firmware.uf2` with a metadata block
+(version, build date, git hash and a CRC32 of the whole image, appended by
+`tools/uf2meta.py`). Copy that file to the root of the SD card and rename it:
+
+```
+    FIRMWARE.UPG
+```
+
+Only a UF2 with a valid metadata block is accepted; a plain UF2 from another
+source is rejected with `Invalid update file`. The same file can still be
+dropped on the USB drive in BOOTSEL mode as usual - the metadata block is a
+regular UF2 block and is simply programmed into the last bytes of the flash.
+
+## Updating
+
+With `FIRMWARE.UPG` on the SD card root:
+
+- The `About` page shows both versions: `ARM s/w ver.` (running firmware) and
+  `FILE s/w ver.` (the update file).
+- The `Update FIRMWARE` menu item validates the file (magic, family, block
+  layout and payload CRC32) and asks for confirmation.
+
+After confirmation the update runs in two phases, takes a few minutes and the
+disk LED blinks while it works:
+
+1. The new image is streamed into a staging area in the upper half of the
+   flash and verified against the metadata CRC.
+2. The staged image is copied over the firmware from a RAM-resident routine
+   and the device reboots into the new version. Do not power off during this
+   phase: a running core may stall briefly until the reboot.
+
+If the update is interrupted (power loss), the RP2040 bootrom will not find a
+valid image and falls back to BOOTSEL USB mass storage, so the board can
+always be recovered by dragging a firmware UF2 (or any earlier release) onto
+it.
+
+## Updating from the menu while development
+
+For testing the update flow without touching the flash, build with
+`-DUPDATE_DRY_RUN=ON`: the update file is validated and staged, the final
+programming step is skipped and a message is logged on the UART console.
+

@@ -82,18 +82,8 @@ uint8_t get_pl2303s(void) {
     return 0;
 }
 
-char *GetFirmwareVersion(char *name) {
-    return NULL;
-}
-
-unsigned char CheckFirmware(char *name) {
-  printf("CheckFirmware: name:%s\n", name);
-  // returns 1 if all ok else 0, setting Error to one of ollowing states
-  // ERROR_NONE
-  // ERROR_FILE_NOT_FOUND
-  // ERROR_INVALID_DATA
-  return ERROR_NONE;
-}
+// CheckFirmware / GetFirmwareVersion / WriteFirmware are implemented in
+// FirmwareUpdate.cxx for the embedded mist-firmware menu.
 
 // This is handled in our mist service
 void usb_init() {}
@@ -106,11 +96,6 @@ void MCUReset() {
 
 void InitADC() {}
 void PollADC() {}
-
-void WriteFirmware(char *name) {
-    printf("WriteFirmware: name:%s\n", name);
-    reset_usb_boot(0, 0);
-}
 
 //--------------------------------------------------------------------
 // Timer related support
