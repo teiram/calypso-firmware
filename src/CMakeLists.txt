@@ -35,9 +35,11 @@ pico_enable_stdio_uart(${PROGRAM_NAME} 1)
 
 pico_add_extra_outputs(${PROGRAM_NAME})
 
-# Append the Calypso metadata block (version, build date, git hash, payload
-# CRC32) to the generated UF2, right after picotool produced it. The on-device
-# updater refuses to flash a /FIRMWARE.UPG file without it.
+# Write FIRMWARE.UPG next to the UF2: a copy of the image with the Calypso
+# metadata block (version, build date, git hash, payload CRC32) appended. The
+# on-device updater refuses to flash a /FIRMWARE.UPG file without it.
+# The UF2 itself stays plain: with the extra block a BOOTSEL copy fails, because
+# the bootrom reboots before the last block is written.
 # Releases are named CLP-<FVERSION> (see version[] in src/mist/compat.c), and
 # the metadata block carries that display name.
 string(TIMESTAMP FW_UPDATE_DATE "%Y%m%d")
@@ -51,8 +53,9 @@ find_package(Python3 COMPONENTS Interpreter REQUIRED)
 add_custom_command(TARGET ${PROGRAM_NAME} POST_BUILD
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/../tools/uf2meta.py
         --version "CLP-${FVERSION}" --date "${FW_UPDATE_DATE}" --git "${FW_UPDATE_GIT}"
+        --output ${CMAKE_CURRENT_BINARY_DIR}/FIRMWARE.UPG
         ${CMAKE_CURRENT_BINARY_DIR}/${PROGRAM_NAME}.uf2
-    COMMENT "Tagging ${PROGRAM_NAME}.uf2 with firmware metadata")
+    COMMENT "Writing FIRMWARE.UPG (${PROGRAM_NAME}.uf2 + firmware metadata)")
 
 add_subdirectory(core)
 add_subdirectory(mist)
