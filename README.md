@@ -44,18 +44,21 @@ on-screen menu (`Update FIRMWARE`), no USB or SWD host is needed.
 
 ## Preparing the update file
 
-The build tags `build/src/calypso-firmware.uf2` with a metadata block
-(version, build date, git hash and a CRC32 of the whole image, appended by
-`tools/uf2meta.py`). Copy that file to the root of the SD card and rename it:
+Next to `build/src/calypso-firmware.uf2` the build writes the update file:
 
 ```
-    FIRMWARE.UPG
+    build/src/FIRMWARE.UPG
 ```
 
-Only a UF2 with a valid metadata block is accepted; a plain UF2 from another
-source is rejected with `Invalid update file`. The same file can still be
-dropped on the USB drive in BOOTSEL mode as usual - the metadata block is a
-regular UF2 block and is simply programmed into the last bytes of the flash.
+It is the same image with a metadata block appended (version, build date, git
+hash and a CRC32 of the whole image, by `tools/uf2meta.py`). Copy it as is to
+the root of the SD card.
+
+Only a file with a valid metadata block is accepted; a plain UF2 is rejected
+with `Invalid update file`. Do not use `FIRMWARE.UPG` for BOOTSEL: its image
+blocks announce one block less than the file holds, so the bootrom reboots
+before the last block is written and the copy fails (on Windows, error
+0x800703EE). Use `calypso-firmware.uf2` for BOOTSEL.
 
 ## Updating
 

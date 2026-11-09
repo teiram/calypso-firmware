@@ -3,10 +3,13 @@
 
 The on-device firmware updater (src/mist/FirmwareUpdate.cxx) refuses to flash
 a /FIRMWARE.UPG file that does not carry this block. The block is a regular
-UF2 block targeting the last 256 bytes of the 16 MB flash (0x10FFFF00), so the
-file stays a perfectly standard UF2: the RP2040 bootrom happily programs those
-harmless bytes during a BOOTSEL drag & drop, and picotool can still parse the
-file.
+UF2 block targeting the last 256 bytes of the 16 MB flash (0x10FFFF00).
+
+The tagged file is meant for the SD card update only (written as FIRMWARE.UPG
+by the build). It must not be used for BOOTSEL: the image blocks announce N
+blocks in total and the metadata block N + 1, so the bootrom reboots once the N
+image blocks are in and the copy of the last block fails (Windows reports error
+0x800703EE). Use the plain UF2 for BOOTSEL.
 
 Block layout (matches Uf2Meta in src/mist/FirmwareUpdate.h):
 
@@ -21,8 +24,9 @@ Block layout (matches Uf2Meta in src/mist/FirmwareUpdate.h):
     68      4     CRC32 of the preceding 68 bytes
     72      184   zero padding
 
-Running the script on an already-tagged file replaces the metadata block, so
-re-running a build is safe.
+With --output the tagged copy is written to another file and the input is left
+untouched. Running the script on an already-tagged file replaces the metadata
+block, so re-running a build is safe.
 """
 
 import argparse
@@ -55,6 +59,8 @@ def parse_args():
     parser.add_argument("--version", required=True, help="firmware version string")
     parser.add_argument("--date", required=True, help="build date, YYYYMMDD")
     parser.add_argument("--git", required=True, help="git short hash")
+    parser.add_argument("--output", "-o",
+                        help="write the tagged file here instead of modifying the input")
     return parser.parse_args()
 
 
@@ -143,10 +149,11 @@ def main():
     meta_block = make_meta_block(magic_start1, magic_end, payload,
                                  args.version, args.date, args.git)
 
-    with open(args.uf2, "wb") as handle:
+    output = args.output or args.uf2
+    with open(output, "wb") as handle:
         handle.write(b"".join(block[2] for block in blocks) + meta_block)
 
-    print(f"uf2meta: tagged {args.uf2}: version {args.version}, "
+    print(f"uf2meta: tagged {output}: version {args.version}, "
           f"payload {len(payload)} bytes, "
           f"CRC32 {zlib.crc32(payload) & 0xFFFFFFFF:08X}")
 

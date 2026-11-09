@@ -9,7 +9,8 @@ extern "C" {
 
 // Update file layout. The update file is the regular build artifact
 // (calypso-firmware.uf2) with a Calypso metadata block appended by
-// tools/uf2meta.py, renamed to /FIRMWARE.UPG on the SD card root.
+// tools/uf2meta.py, written by the build as FIRMWARE.UPG and copied to the
+// SD card root.
 //
 // Flash layout (16 MB part, PICO_FLASH_SIZE_BYTES):
 //
